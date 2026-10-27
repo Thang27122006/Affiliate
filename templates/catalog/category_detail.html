@@ -5,7 +5,47 @@
 {% block title %}{{ category.name }} - Đánh giá & So sánh | Góc Phụ Kiện{% endblock %}
 {% block meta_description %}Danh sách và so sánh các mẫu {{ category.name|lower }} phù hợp nhất cho nhu cầu học tập và làm việc của sinh viên.{% endblock %}
 
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'catalog:category_detail' slug=category.slug %}{% endblock %}
+
+{% block meta_robots %}
+    {% if request.GET.brand or request.GET.price_range or request.GET.price_min or request.GET.price_max or request.GET.no_price or request.GET.sort %}
+        <meta name="robots" content="noindex, follow">
+    {% else %}
+        <meta name="robots" content="index, follow">
+    {% endif %}
+{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Trang chủ",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'core:home' %}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Sản phẩm",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'catalog:product_list' %}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ category.name }}",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'catalog:category_detail' slug=category.slug %}"
+    }
+  ]
+}
+</script>
+{% endblock %}
+
 {% block content %}
+
 <!-- Breadcrumbs -->
 <div class="container">
     <nav class="breadcrumb-nav" aria-label="Đường dẫn điều hướng">

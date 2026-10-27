@@ -4,6 +4,48 @@
 {% block title %}{{ product.name }} ({{ product.brand }}) - Thông số kỹ thuật & Nơi bán | Góc Phụ Kiện{% endblock %}
 {% block meta_description %}{{ product.short_description|default:product.name|truncatewords:25 }}{% endblock %}
 
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}{% endblock %}
+
+{% block og_title %}{{ product.name }} ({{ product.brand }}) - Thông số kỹ thuật & Nơi bán | Góc Phụ Kiện{% endblock %}
+{% block og_description %}{{ product.short_description|default:product.name|truncatewords:25 }}{% endblock %}
+{% block og_image %}{% if primary_image and primary_image.image %}{{ request.scheme }}://{{ request.get_host }}{{ primary_image.image.url }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Trang chủ",
+      "item": "{{ request.scheme }}://{{ request.get_host }}/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Sản phẩm",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'catalog:product_list' %}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ product.category.name|escapejs }}",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{{ product.category.get_absolute_url }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "{{ product.name|escapejs }}",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}"
+    }
+  ]
+}
+</script>
+{# LƯU Ý MINH BẠCH SEO: Chưa thêm Product/Offer schema và tuyệt đối không tạo aggregateRating/giá/tình trạng tồn kho giả theo nguyên tắc biên tập và hướng dẫn kỹ thuật Google. #}
+{% endblock %}
+
 {% block content %}
 <!-- Breadcrumb -->
 <div class="container">
@@ -25,7 +67,7 @@
         <div class="product-gallery">
             <div class="product-main-image">
                 {% if primary_image and primary_image.image %}
-                    <img id="product-main-img" src="{{ primary_image.image.url }}" alt="{{ primary_image.alt_text|default:product.name }}">
+                    <img id="product-main-img" src="{{ primary_image.image.url }}" alt="{{ primary_image.alt_text|default:product.name }}" loading="eager" fetchpriority="high" width="600" height="450" style="width: 100%; height: auto; object-fit: contain;">
                 {% else %}
                     <div class="product-thumb-placeholder" style="font-size: 4rem;">
                         {% if product.category.slug == 'chuot-may-tinh' %}🖱️
@@ -40,7 +82,7 @@
             <div class="gallery-thumbs" style="display: flex; gap: 10px; overflow-x: auto; padding: 4px 0;">
                 {% for img in images %}
                 <button type="button" class="gallery-thumb-btn {% if forloop.first %}active{% endif %}" data-img-src="{{ img.image.url }}" data-img-alt="{{ img.alt_text }}" style="border: 1px solid var(--border-color); background: white; border-radius: 6px; padding: 2px; width: 64px; height: 64px; cursor: pointer;">
-                    <img src="{{ img.image.url }}" alt="{{ img.alt_text }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img src="{{ img.image.url }}" alt="{{ img.alt_text }}" loading="lazy" width="60" height="60" style="width: 100%; height: 100%; object-fit: cover;">
                 </button>
                 {% endfor %}
             </div>

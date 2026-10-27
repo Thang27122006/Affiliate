@@ -61,6 +61,10 @@ class Category(TimeStampedModel):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse("catalog:category_detail", kwargs={"slug": self.slug})
+
     def clean(self):
         super().clean()
         if not self.slug and self.name:
@@ -111,6 +115,10 @@ class Product(TimeStampedModel):
 
     def __str__(self):
         return f"{self.brand} {self.name}".strip()
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse("catalog:product_detail", kwargs={"slug": self.slug})
 
     def clean(self):
         super().clean()

@@ -8,6 +8,29 @@
     <title>{% block title %}Góc Phụ Kiện - Đánh giá & So sánh phụ kiện học tập, làm việc sinh viên{% endblock %}</title>
     <meta name="description" content="{% block meta_description %}Góc Phụ Kiện - Nền tảng đánh giá và so sánh thực tế chuột máy tính, bàn phím và giá đỡ laptop tối ưu ngân sách cho sinh viên.{% endblock %}">
 
+    <!-- Canonical URL động theo domain thực tế -->
+    <link rel="canonical" href="{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}">
+
+    <!-- Điều hướng bot tìm kiếm (mặc định index, follow; các trang tìm kiếm/lọc sâu ghi đè noindex) -->
+    {% block meta_robots %}
+    <meta name="robots" content="index, follow">
+    {% endblock %}
+
+    <!-- Open Graph Metadata (Facebook, Zalo, LinkedIn) -->
+    <meta property="og:site_name" content="Góc Phụ Kiện">
+    <meta property="og:locale" content="vi_VN">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{% block title_content %}Góc Phụ Kiện - Đánh giá & So sánh phụ kiện học tập sinh viên{% endblock %}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Chuyên trang đánh giá và so sánh thực tế phụ kiện công nghệ học tập và làm việc dành cho sinh viên.{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.png' %}{% endblock %}">
+
+    <!-- Twitter Card Metadata -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}{% block title_tw %}Góc Phụ Kiện - Phụ kiện học tập sinh viên{% endblock %}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Đánh giá & so sánh chuột, bàn phím, giá đỡ laptop công thái học cho sinh viên.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.png' %}{% endblock %}">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +39,11 @@
     <!-- Custom CSS (Vanilla Clean Editorial) -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
+
+    <!-- Structured Data JSON-LD (Schema.org) -->
+    {% block structured_data %}{% endblock %}
 </head>
+
 <body>
     <!-- Site Header -->
     <header class="site-header" id="site-header">
@@ -123,12 +150,15 @@
                 <h4 class="footer-heading">Về chúng tôi</h4>
                 <ul class="footer-links">
                     <li><a href="{% url 'core:about' %}">Phương pháp đánh giá</a></li>
-                    <li><a href="{% url 'core:about' %}#affiliate-policy">Chính sách tiếp thị liên kết</a></li>
+                    <li><a href="{% url 'core:about' %}#correction-policy">Chính sách sửa thông tin sai</a></li>
+                    <li><a href="{% url 'core:about' %}#affiliate-policy">Minh bạch tiếp thị liên kết</a></li>
+                    <li><a href="{% url 'core:privacy_policy' %}">Chính sách quyền riêng tư</a></li>
                     <li><a href="/admin/">Cổng quản trị nội dung</a></li>
                     <li><a href="{% url 'core:health_check' %}">Kiểm tra hệ thống</a></li>
                 </ul>
             </div>
         </div>
+
 
         <div class="footer-bottom">
             <div class="container">

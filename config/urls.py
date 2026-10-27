@@ -6,14 +6,33 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from django.contrib.sitemaps.views import sitemap
+from apps.core.sitemaps import (
+    StaticViewSitemap,
+    CategorySitemap,
+    ProductSitemap,
+    ArticleSitemap,
+)
+from apps.core.views import robots_txt_view
+
+sitemaps = {
+    "static": StaticViewSitemap,
+    "categories": CategorySitemap,
+    "products": ProductSitemap,
+    "articles": ArticleSitemap,
+}
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
+    path("robots.txt", robots_txt_view, name="robots_txt"),
     path("", include("apps.affiliates.urls", namespace="affiliates")),
     path("analytics/", include("apps.analytics.urls", namespace="analytics")),
     path("", include("apps.core.urls", namespace="core")),
     path("", include("apps.catalog.urls", namespace="catalog")),
     path("", include("apps.content.urls", namespace="content")),
 ]
+
 
 
 # Custom 404 handler

@@ -2,6 +2,25 @@
 {% load static %}
 
 {% block title %}Góc Phụ Kiện - Đánh giá, so sánh chuột, bàn phím, giá đỡ laptop sinh viên{% endblock %}
+{% block meta_description %}Website đánh giá trung thực, so sánh thông số kỹ thuật chuột, bàn phím, giá đỡ laptop chuẩn ngân sách cho học tập và làm việc sinh viên.{% endblock %}
+
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}/{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Góc Phụ Kiện",
+  "url": "{{ request.scheme }}://{{ request.get_host }}/",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "{{ request.scheme }}://{{ request.get_host }}{% url 'core:search' %}?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <!-- Hero Editorial Section -->

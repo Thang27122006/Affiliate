@@ -5,7 +5,41 @@
 {% block title %}Tất cả sản phẩm phụ kiện sinh viên - Góc Phụ Kiện{% endblock %}
 {% block meta_description %}Tổng hợp tất cả mẫu chuột máy tính, bàn phím và giá đỡ laptop phục vụ học tập, làm việc với bảng thông số và nơi bán tham khảo.{% endblock %}
 
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'catalog:product_list' %}{% endblock %}
+
+{% block meta_robots %}
+    {% if request.GET.brand or request.GET.price_range or request.GET.price_min or request.GET.price_max or request.GET.no_price or request.GET.sort or page_obj.number > 1 %}
+        <meta name="robots" content="noindex, follow">
+    {% else %}
+        <meta name="robots" content="index, follow">
+    {% endif %}
+{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Trang chủ",
+      "item": "{{ request.scheme }}://{{ request.get_host }}/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tất cả sản phẩm",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'catalog:product_list' %}"
+    }
+  ]
+}
+</script>
+{% endblock %}
+
 {% block content %}
+
 <!-- Breadcrumbs -->
 <div class="container">
     <nav class="breadcrumb-nav" aria-label="Đường dẫn điều hướng">

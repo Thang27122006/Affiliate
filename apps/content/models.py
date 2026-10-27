@@ -133,6 +133,10 @@ class Article(TimeStampedModel):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse("content:article_detail", kwargs={"slug": self.slug})
+
     def get_safe_content_html(self):
         """Trả về HTML an toàn đã render từ Markdown và lọc sạch các thẻ nguy hại"""
         return render_safe_markdown(self.content)

@@ -128,3 +128,40 @@ def health_check_view(request):
         },
         status=200 if status == "healthy" else 500,
     )
+
+
+from django.http import HttpResponse
+
+
+def robots_txt_view(request):
+    """
+    Tạo robots.txt động phù hợp môi trường:
+    - Điều hướng bot tìm kiếm lập chỉ mục các trang nội dung chính thống qua sitemap.xml.
+    - Chặn bot thu thập dữ liệu rác trên các endpoint kỹ thuật (/admin/, /analytics/, /go/, /tim-kiem/).
+    - NGUYÊN TẮC BẢO MẬT: Không dùng robots.txt như biện pháp bảo mật cho trang quản trị hoặc bài nháp
+      (các trang này đã được bảo vệ độc lập bằng xác thực Staff và mã HTTP 404).
+    """
+    site_url = f"{request.scheme}://{request.get_host()}"
+    lines = [
+        "User-agent: *",
+        "Disallow: /admin/",
+        "Disallow: /analytics/",
+        "Disallow: /go/",
+        "Disallow: /tim-kiem/",
+        "",
+        f"Sitemap: {site_url}/sitemap.xml",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")
+
+
+def privacy_policy_view(request):
+    """
+    Trang chính sách bảo vệ quyền riêng tư của Góc Phụ Kiện:
+    Mô tả trung thực 100% dữ liệu hệ thống thực tế đang thu thập (lượt xem trang, lượt bấm nơi bán),
+    khẳng định không thu thập IP thô, không thu thập fingerprint, không cookie định danh cá nhân.
+    """
+    context = {
+        "title": "Chính Sách Quyền Riêng Tư & Bảo Mật Dữ Liệu | Góc Phụ Kiện",
+    }
+    return render(request, "core/privacy.html", context)
+

@@ -36,8 +36,10 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
     "django.contrib.postgres",
 ]
+
 
 LOCAL_APPS = [
     "apps.core.apps.CoreConfig",
