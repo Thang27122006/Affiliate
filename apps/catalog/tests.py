@@ -1,4 +1,5 @@
-from django.test import TestCase
+from django.test import TestCase, Client
+from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from apps.catalog.models import (
@@ -11,8 +12,9 @@ from apps.catalog.models import (
 )
 
 
-class CatalogConstraintsTestCase(TestCase):
+class CatalogConstraintsAndViewsTestCase(TestCase):
     def setUp(self):
+        self.client = Client()
         self.cat_mouse = Category.objects.create(
             name="Chuột máy tính",
             slug="chuot-may-tinh",
@@ -22,6 +24,11 @@ class CatalogConstraintsTestCase(TestCase):
             name="Bàn phím",
             slug="ban-phim",
             status=StatusChoices.PUBLISHED,
+        )
+        self.cat_draft = Category.objects.create(
+            name="Danh mục nháp",
+            slug="danh-muc-nhap",
+            status=StatusChoices.DRAFT,
         )
         self.spec_dpi = SpecificationDefinition.objects.create(
             category=self.cat_mouse,
@@ -42,6 +49,13 @@ class CatalogConstraintsTestCase(TestCase):
             slug="logitech-g102",
             status=StatusChoices.PUBLISHED,
         )
+        self.product_draft = Product.objects.create(
+            category=self.cat_mouse,
+            name="Chuột Nháp",
+            brand="OEM",
+            slug="oem-chuot-nhap",
+            status=StatusChoices.DRAFT,
+        )
 
     def test_unique_slug_generation(self):
         """Kiểm tra việc tự động xử lý xung đột slug khi trùng lặp"""
@@ -56,7 +70,6 @@ class CatalogConstraintsTestCase(TestCase):
 
     def test_cross_category_specification_rejected(self):
         """Thông số phải thuộc đúng danh mục của sản phẩm. Gán sai danh mục bắt buộc ném ValidationError"""
-        # Gán thông số 'Loại switch' (của Bàn phím) cho chuột Logitech G102
         invalid_spec = ProductSpecification(
             product=self.product_mouse,
             specification_definition=self.spec_switch,
@@ -92,14 +105,29 @@ class CatalogConstraintsTestCase(TestCase):
         with self.assertRaises(IntegrityError):
             duplicate_spec.save()
 
-    def test_draft_status_not_in_published_queryset(self):
-        """Bản ghi ở trạng thái nháp (draft) không được xuất hiện trong published manager"""
-        draft_product = Product.objects.create(
-            category=self.cat_mouse,
-            name="Chuột Nháp",
-            brand="OEM",
-            status=StatusChoices.DRAFT,
-        )
-        published_products = Product.objects.published()
-        self.assertIn(self.product_mouse, published_products)
-        self.assertNotIn(draft_product, published_products)
+    def test_category_detail_view_published_200(self):
+        """Trang chi tiết danh mục đã xuất bản trả về HTTP 200"""
+        response = self.client.get(reverse("catalog:category_detail", kwargs={"slug": "chuot-may-tinh"}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "catalog/category_detail.html")
+        self.assertContains(response, "G102")
+        # Không được chứa sản phẩm nháp
+        self.assertNotContains(response, "Chuột Nháp")
+
+    def test_category_detail_view_draft_returns_404(self):
+        """Truy cập danh mục ở trạng thái nháp phải trả về 404 Not Found"""
+        response = self.client.get(reverse("catalog:category_detail", kwargs={"slug": "danh-muc-nhap"}))
+        self.assertEqual(response.status_code, 404)
+
+    def test_product_detail_view_published_200(self):
+        """Trang chi tiết sản phẩm đã xuất bản trả về HTTP 200"""
+        response = self.client.get(reverse("catalog:product_detail", kwargs={"slug": "logitech-g102"}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "catalog/product_detail.html")
+        self.assertContains(response, "Logitech")
+        self.assertContains(response, "G102")
+
+    def test_product_detail_view_draft_returns_404(self):
+        """Truy cập sản phẩm ở trạng thái nháp trực tiếp qua URL phải trả về 404 Not Found"""
+        response = self.client.get(reverse("catalog:product_detail", kwargs={"slug": "oem-chuot-nhap"}))
+        self.assertEqual(response.status_code, 404)

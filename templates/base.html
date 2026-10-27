@@ -5,79 +5,97 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>{% block title %}Góc Phụ Kiện - Đánh giá, so sánh phụ kiện học tập & làm việc sinh viên{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}Góc Phụ Kiện - Nền tảng đánh giá và so sánh thực tế phụ kiện học tập, làm việc: chuột, bàn phím, giá đỡ laptop dành riêng cho học sinh, sinh viên.{% endblock %}">
-    
+    <title>{% block title %}Góc Phụ Kiện - Đánh giá & So sánh phụ kiện học tập, làm việc sinh viên{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Góc Phụ Kiện - Nền tảng đánh giá và so sánh thực tế chuột máy tính, bàn phím và giá đỡ laptop tối ưu ngân sách cho sinh viên.{% endblock %}">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
-    <!-- Custom Stylesheet -->
+
+    <!-- Custom CSS (Vanilla Clean Editorial) -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <!-- Site Header -->
     <header class="site-header" id="site-header">
         <div class="container header-container">
-            <a href="{% url 'core:home' %}" class="logo" id="site-logo">
-                <span class="logo-icon">⚡</span>
-                <span class="logo-text">Góc Phụ Kiện</span>
-                <span class="badge badge-subtle">Học tập & Làm việc</span>
+            <a href="{% url 'core:home' %}" class="logo" id="site-logo" aria-label="Góc Phụ Kiện - Trang chủ">
+                <span class="logo-text">⚡ Góc Phụ Kiện</span>
+                <span class="logo-badge">Sinh viên</span>
             </a>
-            
-            <nav class="main-nav" id="main-nav">
-                <a href="#categories" class="nav-link">Danh mục</a>
-                <a href="#architecture" class="nav-link">Kiến trúc</a>
-                <a href="#tech-specs" class="nav-link">Hệ thống</a>
-                <a href="/admin/" class="btn btn-secondary btn-sm" id="btn-admin-portal">
-                    <span>Quản trị (Admin)</span>
-                </a>
+
+            <!-- Search Bar in Header -->
+            <div class="header-search">
+                <form action="{% url 'core:search' %}" method="get" class="search-form" role="search">
+                    <span class="search-icon" aria-hidden="true">🔍</span>
+                    <input type="search" name="q" class="search-input" placeholder="Tìm chuột, bàn phím..." value="{{ request.GET.q|default:'' }}" aria-label="Tìm kiếm sản phẩm hoặc bài viết">
+                </form>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="main-nav" id="main-nav" aria-label="Menu chính">
+                <a href="{% url 'core:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Trang chủ</a>
+                <a href="{% url 'catalog:category_detail' slug='chuot-may-tinh' %}" class="nav-link">Chuột</a>
+                <a href="{% url 'catalog:category_detail' slug='ban-phim' %}" class="nav-link">Bàn phím</a>
+                <a href="{% url 'catalog:category_detail' slug='gia-do-laptop' %}" class="nav-link">Giá đỡ</a>
+                <a href="{% url 'content:article_list' %}" class="nav-link {% if request.resolver_match.app_name == 'content' %}active{% endif %}">Bài viết</a>
+                <a href="{% url 'core:about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">Phương pháp</a>
             </nav>
+
+            <!-- Mobile Menu Toggle Button -->
+            <button class="menu-toggle" id="menu-toggle" aria-label="Mở menu điều hướng" aria-expanded="false">
+                ☰
+            </button>
         </div>
     </header>
 
+    <!-- Main Content Area -->
     <main class="main-content" id="main-content">
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Site Footer -->
     <footer class="site-footer" id="site-footer">
-        <div class="container footer-container">
+        <div class="container footer-grid">
             <div class="footer-brand">
-                <div class="logo">
-                    <span class="logo-icon">⚡</span>
-                    <span class="logo-text">Góc Phụ Kiện</span>
-                </div>
-                <p class="footer-desc">
-                    Website đánh giá, so sánh phụ kiện công nghệ học tập và làm việc tối ưu ngân sách cho sinh viên.
+                <a href="{% url 'core:home' %}" class="logo">
+                    <span class="logo-text">⚡ Góc Phụ Kiện</span>
+                </a>
+                <p class="footer-bio">
+                    Chuyên trang đánh giá và so sánh thực tế phụ kiện công nghệ học tập và làm việc.
+                    Tối ưu không gian học tập, giữ đúng tư thế và phù hợp ngân sách sinh viên.
                 </p>
-                <div class="footer-disclaimer">
-                    <small>⚠️ Lưu ý: Website tham gia tiếp thị liên kết và không trực tiếp phân phối hay lưu trữ đơn hàng.</small>
+                <div class="footer-affiliate-note">
+                    <small>📢 <strong>Minh bạch tiếp thị:</strong> Website có thể nhận hoa hồng nhỏ khi bạn mua hàng qua liên kết đối tác. Giá mua của bạn hoàn toàn không bị thay đổi.</small>
                 </div>
             </div>
-            
-            <div class="footer-links">
-                <h4>Danh mục ban đầu</h4>
-                <ul>
-                    <li><a href="#cat-chuot">🖱️ Chuột máy tính</a></li>
-                    <li><a href="#cat-ban-phim">⌨️ Bàn phím cơ & văn phòng</a></li>
-                    <li><a href="#cat-gia-do-laptop">💻 Giá đỡ laptop công thái học</a></li>
+
+            <div class="footer-col">
+                <h4 class="footer-heading">Danh mục trọng tâm</h4>
+                <ul class="footer-links">
+                    <li><a href="{% url 'catalog:category_detail' slug='chuot-may-tinh' %}">🖱️ Chuột máy tính silent</a></li>
+                    <li><a href="{% url 'catalog:category_detail' slug='ban-phim' %}">⌨️ Bàn phím cơ & di động</a></li>
+                    <li><a href="{% url 'catalog:category_detail' slug='gia-do-laptop' %}">💻 Giá đỡ laptop công thái học</a></li>
+                    <li><a href="{% url 'content:article_list' %}">📝 Tất cả bài đánh giá</a></li>
                 </ul>
             </div>
-            
-            <div class="footer-links">
-                <h4>Hệ thống</h4>
-                <ul>
-                    <li><a href="/health/" target="_blank">Health Check API</a></li>
-                    <li><a href="/admin/">Django Admin Portal</a></li>
-                    <li><a href="https://github.com" target="_blank" rel="noopener">Quy ước dự án</a></li>
+
+            <div class="footer-col">
+                <h4 class="footer-heading">Về chúng tôi</h4>
+                <ul class="footer-links">
+                    <li><a href="{% url 'core:about' %}">Phương pháp đánh giá</a></li>
+                    <li><a href="{% url 'core:about' %}#affiliate-policy">Chính sách tiếp thị liên kết</a></li>
+                    <li><a href="/admin/">Cổng quản trị nội dung</a></li>
+                    <li><a href="{% url 'core:health_check' %}">Kiểm tra hệ thống</a></li>
                 </ul>
             </div>
         </div>
-        
+
         <div class="footer-bottom">
             <div class="container">
-                <p>&copy; 2026 Góc Phụ Kiện. Nền tảng Django monolith & PostgreSQL. Giờ hệ thống: Asia/Ho_Chi_Minh.</p>
+                <p>&copy; 2026 Góc Phụ Kiện. Mọi thông tin đều hướng tới quyền lợi người học. Giờ hệ thống: Asia/Ho_Chi_Minh.</p>
             </div>
         </div>
     </footer>

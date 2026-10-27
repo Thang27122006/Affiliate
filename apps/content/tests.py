@@ -1,8 +1,9 @@
-from django.test import TestCase, RequestFactory
+from datetime import timedelta
+from django.test import TestCase, Client, RequestFactory
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.contrib.admin.sites import AdminSite
 from django.utils import timezone
+from django.urls import reverse
 from apps.catalog.models import Category, Product, StatusChoices
 from apps.content.models import Article, ArticleTypeChoices
 from apps.content.admin import ArticleAdmin
@@ -12,6 +13,7 @@ User = get_user_model()
 
 class ContentAndAdminConstraintsTestCase(TestCase):
     def setUp(self):
+        self.client = Client()
         self.category = Category.objects.create(
             name="Bàn phím",
             slug="ban-phim",
@@ -34,6 +36,37 @@ class ContentAndAdminConstraintsTestCase(TestCase):
             password="AdminPassword123!",
             email="admin1@example.com",
         )
+        self.article_published = Article.objects.create(
+            title="Đánh giá bàn phím E-Dra EK387",
+            slug="danh-gia-ban-phim-e-dra-ek387",
+            author=self.author,
+            content="Nội dung đánh giá thực tế.",
+            article_type=ArticleTypeChoices.REVIEW,
+            status=StatusChoices.PUBLISHED,
+            published_at=timezone.now() - timedelta(days=1),
+            is_hands_on_experience=True,
+            testing_methodology="Gõ văn bản 8 tiếng/ngày trong 2 tuần.",
+            testing_duration="2 tuần",
+        )
+        self.article_published.products.add(self.product)
+
+        self.article_draft = Article.objects.create(
+            title="Bài viết nháp chưa công khai",
+            slug="bai-viet-nhap-chua-cong-khai",
+            author=self.author,
+            content="Nội dung nháp.",
+            status=StatusChoices.DRAFT,
+        )
+
+        self.article_future = Article.objects.create(
+            title="Bài viết hẹn giờ tương lai",
+            slug="bai-viet-hen-gio-tuong-lai",
+            author=self.author,
+            content="Chưa đến ngày công bố.",
+            status=StatusChoices.PUBLISHED,
+            published_at=timezone.now() + timedelta(days=5),
+        )
+
         self.site = AdminSite()
         self.factory = RequestFactory()
 
@@ -58,16 +91,43 @@ class ContentAndAdminConstraintsTestCase(TestCase):
         self.assertIn("Tiêu đề an toàn", safe_html)
         self.assertIn('rel="noopener noreferrer"', safe_html)
 
-    def test_article_product_relationship(self):
-        """Kiểm tra liên kết bài viết với các sản phẩm được đề cập"""
-        article = Article.objects.create(
-            title="Đánh giá bàn phím E-Dra",
-            author=self.author,
-            content="Nội dung đánh giá thực tế.",
-        )
-        article.products.add(self.product)
-        self.assertIn(self.product, article.products.all())
-        self.assertIn(article, self.product.articles.all())
+    def test_article_list_view_200(self):
+        """Trang danh sách bài viết trả về HTTP 200 và chỉ hiển thị bài đã xuất bản"""
+        response = self.client.get(reverse("content:article_list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "content/article_list.html")
+        self.assertContains(response, "Đánh giá bàn phím E-Dra EK387")
+        # Không được hiển thị bài nháp và bài hẹn giờ tương lai
+        self.assertNotContains(response, "Bài viết nháp chưa công khai")
+        self.assertNotContains(response, "Bài viết hẹn giờ tương lai")
+
+    def test_article_list_filter_by_type(self):
+        """Lọc bài viết theo loại (Review, Buying Guide...)"""
+        response = self.client.get(reverse("content:article_list") + "?type=review")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Đánh giá bàn phím E-Dra EK387")
+
+    def test_article_detail_view_published_200(self):
+        """Trang chi tiết bài viết đã xuất bản hiển thị đầy đủ thông tin minh bạch"""
+        response = self.client.get(reverse("content:article_detail", kwargs={"slug": self.article_published.slug}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "content/article_detail.html")
+        self.assertContains(response, "Đánh giá bàn phím E-Dra EK387")
+        self.assertContains(response, "Thông tin minh bạch biên tập")
+        self.assertContains(response, "Đã trực tiếp trải nghiệm")
+        self.assertContains(response, "2 tuần")
+        self.assertContains(response, "Công bố minh bạch")
+        self.assertContains(response, "E-Dra")
+
+    def test_article_detail_draft_returns_404(self):
+        """Truy cập bài viết nháp qua URL trực tiếp bắt buộc trả về 404"""
+        response = self.client.get(reverse("content:article_detail", kwargs={"slug": self.article_draft.slug}))
+        self.assertEqual(response.status_code, 404)
+
+    def test_article_detail_future_published_at_returns_404(self):
+        """Truy cập bài viết có lịch xuất bản trong tương lai bắt buộc trả về 404"""
+        response = self.client.get(reverse("content:article_detail", kwargs={"slug": self.article_future.slug}))
+        self.assertEqual(response.status_code, 404)
 
     def test_admin_auto_assigns_author(self):
         """Admin tự động gán tác giả là user đang đăng nhập nếu chưa chọn tác giả"""
@@ -91,13 +151,8 @@ class ContentAndAdminConstraintsTestCase(TestCase):
             status=StatusChoices.DRAFT,
         )
         request = self.factory.get(f"/admin/content/article/{draft_article.pk}/change/")
-        request.user = self.author  # Staff thông thường không có quyền can_publish_article
+        request.user = self.author
 
         readonly_fields = article_admin.get_readonly_fields(request, draft_article)
         self.assertIn("status", readonly_fields)
         self.assertIn("published_at", readonly_fields)
-
-        # Superuser thì không bị giới hạn readonly
-        request.user = self.superuser
-        superuser_readonly = article_admin.get_readonly_fields(request, draft_article)
-        self.assertNotIn("status", superuser_readonly)

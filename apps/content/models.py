@@ -8,6 +8,19 @@ from apps.core.utils import unique_slugify, render_safe_markdown
 from apps.catalog.models import PublishedQuerySet, StatusChoices
 
 
+class ArticleQuerySet(models.QuerySet):
+    def published(self):
+        """Lọc các bài viết đã xuất bản và thời điểm xuất bản không ở tương lai"""
+        return self.filter(
+            status=StatusChoices.PUBLISHED,
+            published_at__lte=timezone.now(),
+        )
+
+    def draft(self):
+        """Lọc các bài viết ở trạng thái nháp"""
+        return self.filter(status=StatusChoices.DRAFT)
+
+
 class ArticleTypeChoices(models.TextChoices):
     REVIEW = "review", _("Đánh giá chi tiết")
     BUYING_GUIDE = "buying_guide", _("Cẩm nang chọn mua")
@@ -107,7 +120,7 @@ class Article(TimeStampedModel):
         help_text="Thông điệp minh bạch bắt buộc hiển thị đến người đọc.",
     )
 
-    objects = PublishedQuerySet.as_manager()
+    objects = ArticleQuerySet.as_manager()
 
     class Meta:
         verbose_name = "Bài viết"

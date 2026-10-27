@@ -29,6 +29,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Chỉ xóa sạch các bản ghi có cờ is_demo=True trước khi tạo lại (an toàn tuyệt đối với dữ liệu thực).",
         )
+        parser.add_argument(
+            "--publish",
+            action="store_true",
+            help="Thiết lập trạng thái xuất bản (published) cho dữ liệu demo để kiểm tra giao diện công khai.",
+        )
 
     def handle(self, *args, **options):
         if options["clean_demo"]:
@@ -42,7 +47,10 @@ class Command(BaseCommand):
             Merchant.objects.filter(is_demo=True).delete()
             self.stdout.write(self.style.SUCCESS("Đã dọn dẹp dữ liệu demo."))
 
-        self.stdout.write("Bắt đầu khởi tạo dữ liệu demo...")
+        target_status = StatusChoices.PUBLISHED if options.get("publish") else StatusChoices.DRAFT
+        pub_time = timezone.now() if options.get("publish") else None
+
+        self.stdout.write(f"Bắt đầu khởi tạo dữ liệu demo (Trạng thái: {target_status})...")
 
         # 1. Tác giả demo
         author, created = User.objects.get_or_create(
@@ -80,15 +88,18 @@ class Command(BaseCommand):
 
         categories = {}
         for c in cat_data:
-            cat_obj, _ = Category.objects.get_or_create(
+            cat_obj, created = Category.objects.get_or_create(
                 slug=c["slug"],
                 defaults={
                     "name": c["name"],
                     "description": c["description"],
-                    "status": StatusChoices.DRAFT,
+                    "status": target_status,
                     "is_demo": True,
                 },
             )
+            if not created and options.get("publish"):
+                cat_obj.status = target_status
+                cat_obj.save()
             categories[c["slug"]] = cat_obj
             self.stdout.write(f" - Danh mục: {cat_obj.name}")
 
@@ -171,7 +182,7 @@ class Command(BaseCommand):
         products = {}
         for p in products_data:
             cat = categories[p["cat"]]
-            prod_obj, _ = Product.objects.get_or_create(
+            prod_obj, prod_created = Product.objects.get_or_create(
                 slug=p["slug"],
                 defaults={
                     "category": cat,
@@ -179,10 +190,13 @@ class Command(BaseCommand):
                     "brand": p["brand"],
                     "model": p["model"],
                     "short_description": p["short_description"],
-                    "status": StatusChoices.DRAFT,
+                    "status": target_status,
                     "is_demo": True,
                 },
             )
+            if not prod_created and options.get("publish"):
+                prod_obj.status = target_status
+                prod_obj.save()
             products[p["slug"]] = prod_obj
             self.stdout.write(f" - Sản phẩm: {prod_obj}")
 
@@ -286,7 +300,8 @@ Màn hình laptop quá thấp khiến sinh viên phải cúi gập cổ liên t�
                 "content": article_content,
                 "article_type": ArticleTypeChoices.BUYING_GUIDE,
                 "author": author,
-                "status": StatusChoices.DRAFT,  # Mặc định là bản nháp
+                "status": target_status,
+                "published_at": pub_time,
                 "is_demo": True,
                 # Tuyệt đối trung thực: bài viết demo tổng hợp, không giả mạo trải nghiệm thực tế
                 "is_hands_on_experience": False,
@@ -295,12 +310,16 @@ Màn hình laptop quá thấp khiến sinh viên phải cúi gập cổ liên t�
                 "information_source": "Trang thông số kỹ thuật chính hãng Logitech, E-Dra.",
             },
         )
-        if art_created:
-            article.products.add(
-                products["logitech-pebble-m350"],
-                products["e-dra-ek387-rgb"],
-                products["gia-do-nhom-gap-gon-n3"],
-            )
-            self.stdout.write(f" - Bài viết: {article.title}")
+        if not art_created and options.get("publish"):
+            article.status = target_status
+            article.published_at = pub_time
+            article.save()
+
+        article.products.add(
+            products["logitech-pebble-m350"],
+            products["e-dra-ek387-rgb"],
+            products["gia-do-nhom-gap-gon-n3"],
+        )
+        self.stdout.write(f" - Bài viết: {article.title}")
 
         self.stdout.write(self.style.SUCCESS("✓ Khởi tạo dữ liệu mẫu hoàn tất thành công!"))
