@@ -202,15 +202,72 @@ Truy cập:
 
 ---
 
-## 5. Kiểm Thử Hệ Thống (Unit Tests)
-Dự án bao gồm 46 bài kiểm thử tự động bao phủ toàn bộ các luồng nghiệp vụ:
+## 5. Luồng Chuyển Nơi Bán & Ghi Nhận Affiliate An Toàn
+
+### 1. Hai Chế Độ Liên Kết (Link Modes)
+Hệ thống hỗ trợ linh hoạt 2 chế độ liên kết cho từng nơi bán (Merchant) và cho phép cấu hình ghi đè theo từng Offer cụ thể:
+- **Liên kết trực tiếp (`direct` - Mặc định):**
+  - Thẻ `<a>` trên giao diện trỏ thẳng tới URL affiliate của đối tác (`offer.affiliate_url`).
+  - **Lý do mặc định:** Nhiều mạng tiếp thị và sàn TMĐT (Shopee, Lazada...) có điều khoản nghiêm ngặt cấm che link (cloaking), cấm ẩn nguồn truy cập hoặc cấm tự động redirect qua trung gian khi chưa được phê duyệt. Mặc định dùng link trực tiếp để đảm bảo tuân thủ 100% điều khoản chiến dịch và tránh bị hủy doanh số.
+  - Bảo toàn 100% các tham số tracking của URL do quản trị viên nhập (`utm_source`, `aff_id`, `sub_id`,...).
+  - Không tự ý sinh mã affiliate giả lập.
+- **Chuyển hướng nội bộ (`redirect`):**
+  - Thẻ `<a>` trỏ tới endpoint nội bộ `/go/<offer_id>/`.
+  - Server kiểm tra điều kiện xuất bản, tính an toàn của URL và thực hiện HTTP 302 chuyển hướng tới nơi bán.
+  - Chỉ kích hoạt khi đã xác minh rõ điều khoản chương trình đối tác cho phép sử dụng internal redirect/short link.
+
+### 2. An Toàn Liên Kết & Phòng Chống Tấn Công (Link Safety)
+- **Bắt buộc HTTPS:** Parse URL bằng `urllib.parse.urlsplit`, từ chối mọi URL dùng `http://` hoặc các scheme nguy hiểm (`javascript:`, `data:`, `file:`, `ftp:`).
+- **Chặn thông tin đăng nhập trong URL:** Từ chối các URL có chứa credentials dạng `https://user:pass@domain/`.
+- **Kiểm tra Hostname nghiêm ngặt (Whitelist Hostname):**
+  - Phân tích hostname thực tế của URL, so khớp với danh sách `allowed_hostnames` của Merchant.
+  - Chỉ chấp nhận hostname trùng khớp chính xác hoặc là subdomain chuẩn (ví dụ: `s.shopee.vn` hoặc `shopee.vn`).
+  - Chặn triệt để các kỹ thuật giả mạo domain (như `shopee.vn.evil.com` hoặc `evil-shopee.vn`).
+- **Chống Open Redirect:** Endpoint `/go/<int:offer_id>/` chỉ nhận ID số nguyên của Offer từ URL path. Tuyệt đối không chấp nhận tham số URL đích tùy ý từ query string hay request body của người đọc.
+- **Chống Server-Side Request Forgery (SSRF):** Backend không bao giờ thực hiện HTTP request (fetch/download) tới URL đích của nơi bán.
+- **Kiểm soát xuất bản:** Ngắt chuyển hướng và trả về HTTP 404 nếu:
+  - Offer bị vô hiệu hóa (`is_active=False`) hoặc Merchant bị tạm dừng (`is_active=False`).
+  - Sản phẩm liên kết đang ở trạng thái bản nháp (`status != 'published'`).
+  - Danh mục sản phẩm đang ở trạng thái bản nháp (`category.status != 'published'`).
+
+### 3. Ghi Nhận Lượt Bấm Có Trách Nhiệm (Click Tracking & Privacy)
+- **Bảo vệ quyền riêng tư người đọc:**
+  - Tuyệt đối **KHÔNG thu thập địa chỉ IP thô (raw IP)**.
+  - Tuyệt đối **KHÔNG thu thập vân tay trình duyệt (fingerprint)** hay cookies định danh người dùng.
+  - Chỉ ghi nhận: `Offer`, thời điểm bấm (`created_at`), hình thức (`link_mode`), và đường dẫn trang nguồn nội bộ đã được làm sạch (`referrer_path`).
+- **Debounce / Hạn chế spam click tức thời:**
+  - Client-side: Debounce 3 giây cho mỗi offer_id để tránh click đúp.
+  - Server-side: Session cache throttle trong vòng 3 giây ngăn chặn gửi lặp tức thời.
+- **Tính chịu lỗi cao (Fault Tolerance):**
+  - Với liên kết trực tiếp: Thẻ `<a>` luôn mang URL thật, `target="_blank"`, `rel="noopener noreferrer sponsored"`. Việc ghi nhận click được gửi bất đồng bộ qua `navigator.sendBeacon` hoặc `fetch(keepalive)`. Nếu người đọc tắt JavaScript, hoặc API gặp lỗi, hoặc adblocker chặn tracking thì **liên kết vẫn mở bình thường, không hề bị cản trở điều hướng**.
+  - Với chuyển hướng nội bộ: Nếu database hoặc logging gặp sự cố, luồng redirect tới nơi bán vẫn tiếp tục thành công, không trả về lỗi 500 cho người dùng.
+- **Tính chất số liệu:** Thống kê được trình bày rõ ràng là **Số lượt bấm (Clicks)**, không phải số người dùng duy nhất (Unique Visitors); có thể bị ảnh hưởng bởi bot crawl hoặc công cụ chặn theo dõi.
+
+### 4. Giao Diện & Trải Nghiệm Người Đọc (UI/UX)
+- **Công khai minh bạch hoa hồng (Affiliate Disclosure):**
+  - Thông điệp minh bạch hiển thị rõ ràng tại chân trang (`base.html`) và ngay bên dưới khối giá tham khảo (`product_detail.html`).
+  - Khẳng định rõ website có thể nhận hoa hồng nhỏ khi độc giả mua hàng qua liên kết mà **không làm phát sinh thêm bất kỳ chi phí nào** cho độc giả.
+- **Phân định rõ ràng nút hành động:**
+  - Nút chuyển đến nơi bán mang màu cam nổi bật, nhãn rõ ràng: `🏪 Xem tại [Tên nơi bán] ↗`, mở tab mới với `rel="noopener noreferrer sponsored"`.
+  - Phân biệt hoàn toàn với nút "Đọc bài viết &rarr;" hay "Xem thông số chi tiết".
+- **Tuyệt đối không dùng Dark Patterns:**
+  - Không có popup ép bấm ("Click để lấy mã giảm giá", popup che nội dung).
+  - Không tự ý chuyển hướng (auto-redirect) khi người đọc vừa mở trang bài viết.
+
+---
+
+## 6. Kiểm Thử Hệ Thống (Unit Tests)
+Dự án bao gồm **65 bài kiểm thử tự động** bao phủ toàn bộ các luồng nghiệp vụ:
 ```bash
 python manage.py test
 ```
 
 **Các nhóm kiểm thử chính:**
-1. **Catalog Constraints & Data Integrity:** Ràng buộc giá Decimal > 0, chống gán spec sai danh mục, chống trùng spec trên cùng 1 sản phẩm, tự động sinh slug duy nhất chống xung đột.
-2. **Bộ lọc & Sắp xếp:** Kiểm thử lọc kết hợp (danh mục + thương hiệu + khoảng giá), xử lý sản phẩm chưa có giá (không coi là 0đ, lọc riêng, sắp xếp nulls_last).
-3. **So sánh sản phẩm:** So sánh hợp lệ 2-3 sản phẩm, từ chối thêm trùng sản phẩm, từ chối vượt quá 3 sản phẩm, từ chối sản phẩm khác danh mục, loại bỏ sản phẩm nháp, hiển thị "Chưa có thông tin" khi thiếu spec, đúng thứ tự định nghĩa danh mục.
-4. **Tìm kiếm:** Tìm kiếm hoa/thường, tìm kiếm tiếng Việt không dấu (`unaccent`), xử lý chuỗi rỗng/khoảng trắng, tự động rút gọn từ khóa quá dài > 120 ký tự, loại bỏ bài viết nháp/tương lai, phân tách sản phẩm và bài viết.
-5. **Giao diện & Điều hướng:** Kiểm tra cấu trúc menu 4 mục (`Trang chủ | Bài viết | Phương pháp | Sản phẩm ▾`), kiểm tra active state, responsive layout.
+1. **Affiliate Link Safety & Redirect (18 tests):** Bắt buộc HTTPS, giữ nguyên tham số tracking, chặn HTTP/javascript/data/file, chặn URL chứa credentials, chặn hostname giả mạo mạo danh subdomain, kiểm tra 2 chế độ direct/redirect và override, redirect 302 thành công, 404 khi offer/merchant inactive hoặc product/category draft, chống Open Redirect, tính chịu lỗi khi logging thất bại.
+2. **Analytics Click Tracking & Privacy (6 tests):** Ghi nhận direct click thành công, xác minh model không lưu IP thô/fingerprint/PII, debounce throttle 3 giây chống spam lặp, từ chối input lỗi/inactive, xác minh thẻ HTML có href thật hoạt động ngay cả khi JS tắt hoặc tracking lỗi.
+3. **Catalog Constraints & Data Integrity:** Ràng buộc giá Decimal > 0, chống gán spec sai danh mục, chống trùng spec trên cùng 1 sản phẩm, tự động sinh slug duy nhất chống xung đột.
+4. **Bộ lọc & Sắp xếp:** Kiểm thử lọc kết hợp (danh mục + thương hiệu + khoảng giá), xử lý sản phẩm chưa có giá (không coi là 0đ, lọc riêng, sắp xếp nulls_last).
+5. **So sánh sản phẩm:** So sánh hợp lệ 2-3 sản phẩm, từ chối thêm trùng sản phẩm, từ chối vượt quá 3 sản phẩm, từ chối sản phẩm khác danh mục, loại bỏ sản phẩm nháp, hiển thị "Chưa có thông tin" khi thiếu spec, đúng thứ tự định nghĩa danh mục.
+6. **Tìm kiếm:** Tìm kiếm hoa/thường, tìm kiếm tiếng Việt không dấu (`unaccent`), xử lý chuỗi rỗng/khoảng trắng, tự động rút gọn từ khóa quá dài > 120 ký tự, loại bỏ bài viết nháp/tương lai, phân tách sản phẩm và bài viết.
+7. **Giao diện & Điều hướng:** Kiểm tra cấu trúc menu 4 mục (`Trang chủ | Bài viết | Phương pháp | Sản phẩm ▾`), kiểm tra active state, responsive layout.
+

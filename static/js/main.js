@@ -99,4 +99,61 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // 5. Ghi nhận lượt bấm Affiliate an toàn (Direct Link Tracking)
+    // - Chỉ ghi nhận cho liên kết trực tiếp (link_mode = 'direct'); liên kết 'redirect' do server tự xử lý.
+    // - Tuyệt đối KHÔNG chặn điều hướng (không dùng preventDefault, không gây trễ khi mở tab).
+    // - Hạn chế gửi sự kiện lặp tức thời (Debounce 3 giây phía client).
+    // - Dùng navigator.sendBeacon hoặc fetch keepalive không đồng bộ.
+    const recentClicks = {};
+
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a[data-track-click="true"]');
+        if (!link) return;
+
+        const offerId = link.getAttribute('data-offer-id');
+        const linkMode = link.getAttribute('data-link-mode');
+
+        // Nếu là chuyển hướng nội bộ (redirect), server đã tự ghi nhận trong redirect_offer_view
+        if (linkMode !== 'direct') return;
+
+        if (!offerId) return;
+
+        const now = Date.now();
+        // Client-side debounce 3 giây cho cùng một offer_id để tránh spam click đúp
+        if (recentClicks[offerId] && now - recentClicks[offerId] < 3000) {
+            return;
+        }
+        recentClicks[offerId] = now;
+
+        const payload = {
+            offer_id: parseInt(offerId, 10),
+            referrer_path: window.location.pathname
+        };
+
+        const targetApi = '/analytics/api/click/';
+
+        try {
+            if (navigator.sendBeacon) {
+                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+                const sent = navigator.sendBeacon(targetApi, blob);
+                if (sent) return;
+            }
+
+            // Fallback sang fetch với keepalive nếu sendBeacon trả về false hoặc không hỗ trợ
+            if (window.fetch) {
+                fetch(targetApi, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    keepalive: true
+                }).catch(() => {
+                    // Lỗi tracking hoàn toàn âm thầm, không ảnh hưởng đến điều hướng của độc giả
+                });
+            }
+        } catch (err) {
+            // Chịu lỗi tuyệt đối: không để ngoại lệ JS làm gián đoạn hành vi người dùng
+        }
+    });
 });
+

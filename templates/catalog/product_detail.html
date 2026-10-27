@@ -98,16 +98,23 @@
                         </div>
 
                         <div>
-                            <a href="{{ offer.affiliate_url }}" target="_blank" rel="noopener noreferrer sponsored" class="btn btn-affiliate btn-sm" title="Mở website đối tác {{ offer.merchant.name }} trong tab mới">
-                                <span>Xem tại {{ offer.merchant.name }}</span>
+                            <a href="{{ offer.get_destination_url }}" 
+                               target="_blank" 
+                               rel="noopener noreferrer sponsored" 
+                               class="btn btn-affiliate btn-sm" 
+                               data-track-click="true"
+                               data-offer-id="{{ offer.id }}"
+                               data-link-mode="{{ offer.get_effective_link_mode }}"
+                               title="Mở website chính thức của {{ offer.merchant.name }} trong tab mới (Liên kết đối tác thương mại)">
+                                <span>🏪 Xem tại {{ offer.merchant.name }}</span>
                                 <span aria-hidden="true">&nearr;</span>
                             </a>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
-                <div style="margin-top: 14px; font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
-                    ℹ️ <em>Giá hiển thị là mức giá tham khảo tại thời điểm ghi nhận. Nhấp vào nút mua sẽ chuyển tiếp bạn sang website chính thức của đối tác phân phối.</em>
+                <div class="affiliate-disclosure-note" style="margin-top: 14px; font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; padding: 8px 12px; background: var(--bg-surface); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    ⚖️ <em>Minh bạch tài trợ: Mức giá hiển thị là giá tham khảo tại thời điểm kiểm tra. Khi bạn bấm chuyển đến nơi bán và mua hàng, Góc Phụ Kiện có thể nhận được một khoản hoa hồng nhỏ từ đối tác phân phối mà không làm tăng giá sản phẩm của bạn. Điều này giúp chúng tôi duy trì các bài đánh giá độc lập.</em>
                 </div>
                 {% else %}
                 <div class="empty-state" style="padding: 24px 16px; margin: 0;">

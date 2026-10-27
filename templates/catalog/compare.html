@@ -194,8 +194,16 @@
                                             <div style="color: var(--primary); font-weight: 600;">{{ offer.price|floatformat:0 }} đ</div>
                                         {% endif %}
                                     </div>
-                                    <a href="{{ offer.affiliate_url }}" target="_blank" rel="noopener noreferrer sponsored" class="btn btn-affiliate btn-sm" style="padding: 4px 8px; font-size: 0.78rem;">
-                                        Xem ↗
+                                    <a href="{{ offer.get_destination_url }}" 
+                                       target="_blank" 
+                                       rel="noopener noreferrer sponsored" 
+                                       class="btn btn-affiliate btn-sm" 
+                                       data-track-click="true"
+                                       data-offer-id="{{ offer.id }}"
+                                       data-link-mode="{{ offer.get_effective_link_mode }}"
+                                       style="padding: 4px 8px; font-size: 0.78rem;"
+                                       title="Xem tại đối tác {{ offer.merchant.name }} (Mở tab mới)">
+                                        🏪 Xem ↗
                                     </a>
                                 </div>
                                 {% endfor %}
