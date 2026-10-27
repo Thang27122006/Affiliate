@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chính Sách Quyền Riêng Tư & Bảo Mật Dữ Liệu - Góc Phụ Kiện{% endblock %}
+{% block meta_description %}Cam kết bảo vệ quyền riêng tư minh bạch của Góc Phụ Kiện. Chúng tôi không thu thập IP thô, không theo dõi vân tay trình duyệt và không lưu thông tin cá nhân của người mua hàng.{% endblock %}
+
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'core:privacy_policy' %}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Trang chủ",
+      "item": "{{ request.scheme }}://{{ request.get_host }}/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Chính sách quyền riêng tư",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'core:privacy_policy' %}"
+    }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav class="breadcrumb-nav" aria-label="Đường dẫn điều hướng">
+        <ol class="breadcrumb-list">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Trang chủ</a></li>
+            <li class="breadcrumb-separator" aria-hidden="true">/</li>
+            <li class="breadcrumb-item breadcrumb-current" aria-current="page">Chính sách quyền riêng tư</li>
+        </ol>
+    </nav>
+</div>
+
+<header class="page-header">
+    <div class="container" style="max-width: 820px;">
+        <span class="badge badge-primary" style="margin-bottom: 12px;">🛡️ Cam Kết Bảo Mật</span>
+        <h1 class="page-title" style="font-size: 2.2rem; line-height: 1.3;">Chính Sách Quyền Riêng Tư & Dữ Liệu</h1>
+        <p class="section-subtitle" style="font-size: 1.05rem; margin-top: 10px;">
+            Minh bạch tuyệt đối về những dữ liệu kỹ thuật website ghi nhận và những gì chúng tôi cam kết KHÔNG BAO GIỜ thu thập.
+        </p>
+    </div>
+</header>
+
+<div class="container section" style="max-width: 820px; padding-top: 32px; padding-bottom: 60px;">
+    <article class="article-content-body" style="font-size: 1rem; line-height: 1.7; color: var(--text-main);">
+        <h2>1. Tuyên Bố Cốt Lõi: Tôn Trọng Quyền Riêng Tư Của Người Học</h2>
+        <p>
+            <strong>Góc Phụ Kiện</strong> được xây dựng như một chuyên trang thông tin, đánh giá và so sánh phụ kiện công nghệ phục vụ sinh viên và người đi làm trẻ. Chúng tôi tin rằng độc giả có quyền tiếp cận thông tin độc lập mà không phải đánh đổi quyền riêng tư của mình. Website được thiết kế theo nguyên tắc tối giản dữ liệu (Data Minimization) ngay từ tầng kiến trúc mã nguồn.
+        </p>
+
+        <h2>2. Dữ Liệu Kỹ Thuật Hệ Thống Đang Thu Thập</h2>
+        <p>Hệ thống chỉ ghi nhận các sự kiện kỹ thuật cần thiết để duy trì và cải thiện chất lượng nội dung:</p>
+        <ul>
+            <li>
+                <strong>Lượt xem trang (Page Views):</strong> Ghi nhận sự kiện một trang sản phẩm hoặc bài viết được tải thành công trên trình duyệt (đường dẫn URL và thời điểm tải). Dữ liệu này dùng để thống kê mức độ quan tâm của độc giả đối với từng chủ đề.
+            </li>
+            <li>
+                <strong>Lượt bấm chuyển đến nơi bán (Affiliate Clicks):</strong> Ghi nhận sự kiện độc giả nhấp chuột vào liên kết xem nơi bán đối tác (sản phẩm, nơi bán, thời điểm bấm và trang nguồn nội bộ). Dữ liệu này giúp ban biên tập biết phụ kiện nào đang được sinh viên quan tâm nhất.
+            </li>
+        </ul>
+
+        <div style="margin: 24px 0; padding: 16px 20px; background: #ecfdf5; border-left: 4px solid #10b981; border-radius: var(--radius-sm);">
+            <strong style="color: #065f46;">🔒 Cam Kết 4 KHÔNG Trong Thu Thập Dữ Liệu:</strong>
+            <ul style="margin: 8px 0 0 18px; padding: 0; color: #047857;">
+                <li><strong>KHÔNG thu thập địa chỉ IP thô (Raw IP Address):</strong> Hệ thống không lưu trữ địa chỉ IP của bạn vào bất kỳ bảng cơ sở dữ liệu nào.</li>
+                <li><strong>KHÔNG thu thập vân tay trình duyệt (Device/Browser Fingerprinting):</strong> Không sử dụng canvas, audio, font fingerprinting để nhận diện thiết bị của bạn.</li>
+                <li><strong>KHÔNG sử dụng cookies định danh cá nhân hay tracking cross-site:</strong> Website không gắn cookies theo dõi bạn sang các trang web khác.</li>
+                <li><strong>KHÔNG chia sẻ hay bán dữ liệu cho bên thứ ba:</strong> Dữ liệu sự kiện chỉ dùng cho mục đích thống kê nội bộ của Góc Phụ Kiện.</li>
+            </ul>
+        </div>
+
+        <h2>3. Dữ Liệu Đối Soát Từ Sàn Thương Mại Điện Tử (Affiliate Partners)</h2>
+        <p>
+            Khi bạn bấm vào liên kết nơi bán và phát sinh giao dịch mua hàng trên các sàn đối tác (như Shopee, Tiki, Lazada...), đối tác phân phối sẽ ghi nhận giao dịch theo chính sách của họ. Định kỳ, chúng tôi nhận báo cáo đối soát hoa hồng từ sàn:
+        </p>
+        <ul>
+            <li>
+                Báo cáo chỉ gồm các mã kỹ thuật ẩn danh: Mã giao dịch đối tác (Order ID ẩn danh), thời gian đơn, trạng thái hoa hồng và số tiền hoa hồng.
+            </li>
+            <li>
+                <strong>Tuyệt đối KHÔNG chứa thông tin cá nhân của người mua:</strong> Chúng tôi không biết và không yêu cầu họ tên, số điện thoại, địa chỉ nhận hàng, phương thức thanh toán hay bất kỳ thông tin nhận dạng cá nhân nào của bạn.
+            </li>
+        </ul>
+
+        <h2>4. Chính Sách Lưu Giữ & Dọn Dẹp Dữ Liệu Sự Kiện</h2>
+        <p>
+            Các bản ghi sự kiện lượt xem trang và lượt bấm được hệ thống tự động quét và dọn dẹp định kỳ sau 90 ngày nhằm giải phóng bộ nhớ và tuân thủ nguyên tắc không lưu trữ dữ liệu thừa. Dữ liệu đối soát tài chính tổng hợp được lưu giữ phục vụ việc kê khai thuế và đối chiếu kế toán theo quy định pháp luật.
+        </p>
+
+        <h2>5. Kênh Liên Hệ & Giải Đáp Thắc Mắc</h2>
+        <p>
+            Nếu bạn có bất kỳ câu hỏi nào liên quan đến chính sách dữ liệu hoặc phương pháp đo lường của Góc Phụ Kiện, vui lòng gửi phản hồi cho ban quản trị tại mục <a href="{% url 'core:about' %}#correction-policy">Chính sách sửa đổi & liên hệ</a>.
+        </p>
+    </article>
+</div>
+{% endblock %}
