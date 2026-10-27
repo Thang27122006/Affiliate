@@ -332,6 +332,18 @@ def product_compare_view(request):
                         .order_by("name")
                     )
 
+                # Sinh remove_url an toàn cho từng sản phẩm
+                for prod in products:
+                    other_slugs = [p.slug for p in products if p.slug != prod.slug]
+                    if other_slugs:
+                        query_part = "&".join(f"p={s}" for s in other_slugs)
+                        prod.remove_url = f"?{query_part}"
+                    else:
+                        prod.remove_url = "?"
+
+    can_add_more = bool(other_category_products and len(products) < 3)
+    has_valid_comparison = bool(len(products) >= 2 and not error_message)
+
     context = {
         "title": f"So sánh {category.name if category else 'sản phẩm'} - Góc Phụ Kiện",
         "category": category,
@@ -340,6 +352,8 @@ def product_compare_view(request):
         "error_message": error_message,
         "categories": categories,
         "other_category_products": other_category_products,
+        "can_add_more": can_add_more,
+        "has_valid_comparison": has_valid_comparison,
         "selected_slugs": slugs,
     }
     return render(request, "catalog/compare.html", context)

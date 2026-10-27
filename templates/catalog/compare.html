@@ -31,7 +31,7 @@
             {% if category %}
                 So Sánh {{ category.name }}
             {% else %}
-                So Sánh Phụ Kiện Học Tập & Làm Việc
+                So Sánh Phụ Kiện Học Tập &amp; Làm Việc
             {% endif %}
         </h1>
         <p class="section-subtitle" style="max-width: 720px;">
@@ -61,7 +61,7 @@
     </div>
     {% endif %}
 
-    {% if products and products|length >= 2 %}
+    {% if has_valid_comparison %}
     <!-- Bảng so sánh sản phẩm (2 đến 3 sản phẩm hợp lệ) -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
         <div>
@@ -70,7 +70,7 @@
             </span>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
-            {% if other_category_products and products|length < 3 %}
+            {% if can_add_more %}
             <form method="get" action="{% url 'catalog:compare' %}" style="display: flex; gap: 6px; align-items: center;">
                 {% for prod in products %}
                     <input type="hidden" name="p" value="{{ prod.slug }}">
@@ -97,13 +97,13 @@
                         Sản phẩm đối chiếu
                     </th>
                     {% for prod in products %}
-                    <th scope="col" style="padding: 18px 16px; vertical-align: top; width: calc((100% - 220px) / {{ products|length }}); border-right: {% if not forloop.last %}1px solid var(--border-color){% else %}none{% endif %};">
+                    <th scope="col" style="padding: 18px 16px; vertical-align: top; border-right: 1px solid var(--border-color);">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                             <span class="badge badge-neutral" style="font-size: 0.75rem;">{{ prod.brand }}</span>
                             <!-- Nút xóa sản phẩm khỏi danh sách so sánh -->
-                            <a href="{% url 'catalog:compare' %}?{% for p in products %}{% if p.slug != prod.slug %}p={{ p.slug }}&{% endif %}{% endfor %}"
+                            <a href="{{ prod.remove_url }}" 
                                class="compare-remove-btn" 
-                               title="Bỏ {{ prod.name }} khỏi bảng so sánh" 
+                               title="Bỏ sản phẩm khỏi bảng so sánh" 
                                style="color: var(--text-muted); font-size: 0.85rem; padding: 2px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); text-decoration: none; line-height: 1;">
                                ✕ Bỏ
                             </a>
@@ -123,7 +123,7 @@
                         </div>
 
                         <h3 style="font-size: 1.05rem; margin-bottom: 4px; line-height: 1.35;">
-                            <a href="{% url 'catalog:product_detail' slug=prod.slug %}" style="color: var(--text-primary); text-decoration: none;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-primary)'">
+                            <a href="{% url 'catalog:product_detail' slug=prod.slug %}" style="color: var(--text-primary); text-decoration: none;">
                                 {{ prod.name }}
                             </a>
                         </h3>
@@ -144,7 +144,7 @@
                         </div>
                     </th>
                     {% for prod in products %}
-                    <td style="padding: 14px 16px; vertical-align: middle; border-right: {% if not forloop.last %}1px solid var(--border-color){% else %}none{% endif %};">
+                    <td style="padding: 14px 16px; vertical-align: middle; border-right: 1px solid var(--border-color);">
                         {% if prod.min_price %}
                             <div style="font-size: 1.15rem; font-weight: 700; color: var(--primary);">
                                 từ {{ prod.min_price|floatformat:0 }} đ
@@ -164,7 +164,7 @@
                         Thời điểm kiểm tra giá
                     </th>
                     {% for prod in products %}
-                    <td style="padding: 12px 16px; vertical-align: middle; border-right: {% if not forloop.last %}1px solid var(--border-color){% else %}none{% endif %}; font-size: 0.9rem; color: var(--text-secondary);">
+                    <td style="padding: 12px 16px; vertical-align: middle; border-right: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-secondary);">
                         {% if prod.last_checked %}
                             {{ prod.last_checked|date:"d/m/Y" }}
                         {% else %}
@@ -177,13 +177,13 @@
                 <!-- Hàng 3: Nơi bán tham khảo (Offers) -->
                 <tr style="border-bottom: 2px solid var(--border-color); background: #fafafa;">
                     <th scope="row" style="padding: 14px 16px; font-weight: 600; color: var(--text-primary); border-right: 1px solid var(--border-color); vertical-align: top;">
-                        Nơi bán & Mua hàng
+                        Nơi bán &amp; Mua hàng
                         <div style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted); margin-top: 2px;">
                             Liên kết đối tác minh bạch
                         </div>
                     </th>
                     {% for prod in products %}
-                    <td style="padding: 14px 16px; vertical-align: top; border-right: {% if not forloop.last %}1px solid var(--border-color){% else %}none{% endif %};">
+                    <td style="padding: 14px 16px; vertical-align: top; border-right: 1px solid var(--border-color);">
                         {% if prod.active_offers_list %}
                             <div style="display: flex; flex-direction: column; gap: 8px;">
                                 {% for offer in prod.active_offers_list %}
@@ -195,7 +195,7 @@
                                         {% endif %}
                                     </div>
                                     <a href="{{ offer.affiliate_url }}" target="_blank" rel="noopener noreferrer sponsored" class="btn btn-affiliate btn-sm" style="padding: 4px 8px; font-size: 0.78rem;">
-                                        Xem &nearr;
+                                        Xem ↗
                                     </a>
                                 </div>
                                 {% endfor %}
@@ -209,9 +209,15 @@
 
                 <!-- Tiêu đề phân mục thông số kỹ thuật -->
                 <tr style="background: var(--bg-surface-alt); border-bottom: 1px solid var(--border-color);">
-                    <th colspan="{{ products|length|add:1 }}" style="padding: 12px 16px; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.03em;">
+                    {% if products|length == 2 %}
+                    <th colspan="3" style="padding: 12px 16px; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.03em;">
                         📋 Thông số kỹ thuật chi tiết
                     </th>
+                    {% else %}
+                    <th colspan="4" style="padding: 12px 16px; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.03em;">
+                        📋 Thông số kỹ thuật chi tiết
+                    </th>
+                    {% endif %}
                 </tr>
 
                 <!-- Các hàng thông số kỹ thuật theo thứ tự định nghĩa chung -->
@@ -224,7 +230,7 @@
                         {% endif %}
                     </th>
                     {% for val in srow.values %}
-                    <td style="padding: 12px 16px; vertical-align: middle; border-right: {% if not forloop.last %}1px solid var(--border-color){% else %}none{% endif %}; font-size: 0.9rem;">
+                    <td style="padding: 12px 16px; vertical-align: middle; border-right: 1px solid var(--border-color); font-size: 0.9rem;">
                         {% if val.has_value %}
                             <span style="color: var(--text-primary); font-weight: 600;">{{ val.display }}</span>
                         {% else %}
@@ -235,9 +241,15 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="{{ products|length|add:1 }}" style="padding: 24px; text-align: center; color: var(--text-muted);">
+                    {% if products|length == 2 %}
+                    <td colspan="3" style="padding: 24px; text-align: center; color: var(--text-muted);">
                         Danh mục này chưa cấu hình các định nghĩa thông số kỹ thuật.
                     </td>
+                    {% else %}
+                    <td colspan="4" style="padding: 24px; text-align: center; color: var(--text-muted);">
+                        Danh mục này chưa cấu hình các định nghĩa thông số kỹ thuật.
+                    </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
 
@@ -247,7 +259,7 @@
                         Tóm tắt đặc điểm
                     </th>
                     {% for prod in products %}
-                    <td style="padding: 14px 16px; vertical-align: top; border-right: {% if not forloop.last %}1px solid var(--border-color){% else %}none{% endif %}; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">
+                    <td style="padding: 14px 16px; vertical-align: top; border-right: 1px solid var(--border-color); font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">
                         {{ prod.short_description|default:"Chưa có mô tả ngắn." }}
                         <div style="margin-top: 10px;">
                             <a href="{% url 'catalog:product_detail' slug=prod.slug %}" class="btn btn-secondary btn-sm" style="font-size: 0.8rem;">
