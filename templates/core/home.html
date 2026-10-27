@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Trang chủ - Góc Phụ Kiện | Đánh giá & So sánh phụ kiện sinh viên{% endblock %}
+
+{% block content %}
+<section class="hero-section" id="hero">
+    <div class="container hero-container">
+        <div class="hero-badge">
+            <span class="status-dot status-dot-active"></span>
+            <span>Khởi tạo nền tảng thành công</span>
+        </div>
+        <h1 class="hero-title">
+            Đánh giá & So sánh <span class="gradient-text">Phụ Kiện Học Tập</span> Chuẩn Sinh Viên
+        </h1>
+        <p class="hero-subtitle">
+            Nền tảng cung cấp thông tin trung thực, so sánh thực tế chuột máy tính, bàn phím và giá đỡ laptop
+            giúp bạn tối ưu không gian bàn học và ngân sách học tập.
+        </p>
+
+        <div class="system-status-box">
+            <div class="status-row">
+                <span class="status-label">Trạng thái cơ sở dữ liệu:</span>
+                {% if db_connected %}
+                    <span class="badge badge-success">
+                        <span class="status-dot status-dot-success"></span> PostgreSQL Đã kết nối
+                    </span>
+                {% else %}
+                    <span class="badge badge-error">
+                        <span class="status-dot status-dot-error"></span> Lỗi kết nối DB: {{ db_error }}
+                    </span>
+                {% endif %}
+            </div>
+            <div class="status-row">
+                <span class="status-label">Kiến trúc:</span>
+                <span class="badge badge-neutral">Django Monolith + PostgreSQL</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Múi giờ & Ngôn ngữ:</span>
+                <span class="badge badge-neutral">Asia/Ho_Chi_Minh | Tiếng Việt</span>
+            </div>
+        </div>
+
+        <div class="hero-actions">
+            <a href="#categories" class="btn btn-primary" id="btn-explore-categories">
+                <span>Khám phá 3 danh mục ban đầu</span>
+                <span class="btn-arrow">↓</span>
+            </a>
+            <a href="/admin/" class="btn btn-outline" id="btn-view-admin">
+                <span>Django Admin</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Danh mục ban đầu: Chuột, Bàn phím, Giá đỡ laptop -->
+<section class="section categories-section" id="categories">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag">Phạm vi giai đoạn 1</span>
+            <h2 class="section-title">Danh Mục Phụ Kiện Trọng Tâm</h2>
+            <p class="section-subtitle">Ba dòng phụ kiện thiết yếu nhất cho góc học tập và làm việc của sinh viên hiện đại.</p>
+        </div>
+
+        <div class="categories-grid">
+            {% for cat in categories %}
+            <div class="card category-card" id="cat-{{ cat.id }}">
+                <div class="card-icon-wrapper">
+                    <span class="card-icon">{{ cat.icon }}</span>
+                </div>
+                <h3 class="card-title">{{ cat.name }}</h3>
+                <p class="card-description">{{ cat.description }}</p>
+                <div class="card-footer">
+                    <span class="tag tag-outline">Sắp ra mắt so sánh</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Thông số hệ thống & Quy ước dự án -->
+<section class="section tech-section" id="tech-specs">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag">Công nghệ & Cấu trúc</span>
+            <h2 class="section-title">Phân Chia Module Theo Trách Nhiệm</h2>
+            <p class="section-subtitle">Kiến trúc module hóa rõ ràng đảm bảo khả năng bảo trì và mở rộng an toàn.</p>
+        </div>
+
+        <div class="modules-grid">
+            <div class="module-card">
+                <div class="module-code">apps.core</div>
+                <h4>Hệ thống Cốt lõi</h4>
+                <p>Quản lý trang chủ, layouts, utils, abstract models, health check.</p>
+                <span class="badge badge-success">Hoạt động</span>
+            </div>
+
+            <div class="module-card">
+                <div class="module-code">apps.catalog</div>
+                <h4>Danh mục & Sản phẩm</h4>
+                <p>Quản lý chuột, bàn phím, giá đỡ laptop, thông số kỹ thuật.</p>
+                <span class="badge badge-neutral">Sẵn sàng (Phase 2)</span>
+            </div>
+
+            <div class="module-card">
+                <div class="module-code">apps.content</div>
+                <h4>Nội dung & Đánh giá</h4>
+                <p>Bài viết đánh giá chuyên sâu, cẩm nang chọn mua, so sánh tiêu chí.</p>
+                <span class="badge badge-neutral">Sẵn sàng (Phase 3)</span>
+            </div>
+
+            <div class="module-card">
+                <div class="module-code">apps.affiliates</div>
+                <h4>Tiếp thị liên kết</h4>
+                <p>Quản lý đối tác bán hàng, tracking liên kết tiếp thị, chuyển hướng.</p>
+                <span class="badge badge-neutral">Sẵn sàng (Phase 4)</span>
+            </div>
+
+            <div class="module-card">
+                <div class="module-code">apps.analytics</div>
+                <h4>Phân tích & Thống kê</h4>
+                <p>Ghi nhận lượt click, số liệu tương tác phục vụ tối ưu hóa.</p>
+                <span class="badge badge-neutral">Sẵn sàng (Phase 5)</span>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

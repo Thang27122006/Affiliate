@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}Góc Phụ Kiện - Đánh giá, so sánh phụ kiện học tập & làm việc sinh viên{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Góc Phụ Kiện - Nền tảng đánh giá và so sánh thực tế phụ kiện học tập, làm việc: chuột, bàn phím, giá đỡ laptop dành riêng cho học sinh, sinh viên.{% endblock %}">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header class="site-header" id="site-header">
+        <div class="container header-container">
+            <a href="{% url 'core:home' %}" class="logo" id="site-logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">Góc Phụ Kiện</span>
+                <span class="badge badge-subtle">Học tập & Làm việc</span>
+            </a>
+            
+            <nav class="main-nav" id="main-nav">
+                <a href="#categories" class="nav-link">Danh mục</a>
+                <a href="#architecture" class="nav-link">Kiến trúc</a>
+                <a href="#tech-specs" class="nav-link">Hệ thống</a>
+                <a href="/admin/" class="btn btn-secondary btn-sm" id="btn-admin-portal">
+                    <span>Quản trị (Admin)</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content" id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer" id="site-footer">
+        <div class="container footer-container">
+            <div class="footer-brand">
+                <div class="logo">
+                    <span class="logo-icon">⚡</span>
+                    <span class="logo-text">Góc Phụ Kiện</span>
+                </div>
+                <p class="footer-desc">
+                    Website đánh giá, so sánh phụ kiện công nghệ học tập và làm việc tối ưu ngân sách cho sinh viên.
+                </p>
+                <div class="footer-disclaimer">
+                    <small>⚠️ Lưu ý: Website tham gia tiếp thị liên kết và không trực tiếp phân phối hay lưu trữ đơn hàng.</small>
+                </div>
+            </div>
+            
+            <div class="footer-links">
+                <h4>Danh mục ban đầu</h4>
+                <ul>
+                    <li><a href="#cat-chuot">🖱️ Chuột máy tính</a></li>
+                    <li><a href="#cat-ban-phim">⌨️ Bàn phím cơ & văn phòng</a></li>
+                    <li><a href="#cat-gia-do-laptop">💻 Giá đỡ laptop công thái học</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-links">
+                <h4>Hệ thống</h4>
+                <ul>
+                    <li><a href="/health/" target="_blank">Health Check API</a></li>
+                    <li><a href="/admin/">Django Admin Portal</a></li>
+                    <li><a href="https://github.com" target="_blank" rel="noopener">Quy ước dự án</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <div class="container">
+                <p>&copy; 2026 Góc Phụ Kiện. Nền tảng Django monolith & PostgreSQL. Giờ hệ thống: Asia/Ho_Chi_Minh.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Vanilla Javascript -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
