@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} ({{ product.brand }}) - Thông số kỹ thuật & Nơi bán | Góc Phụ Kiện{% endblock %}
+{% block meta_description %}{{ product.short_description|default:product.name|truncatewords:25 }}{% endblock %}
+
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}{% endblock %}
+
+{% block og_title %}{{ product.name }} ({{ product.brand }}) - Thông số kỹ thuật & Nơi bán | Góc Phụ Kiện{% endblock %}
+{% block og_description %}{{ product.short_description|default:product.name|truncatewords:25 }}{% endblock %}
+{% block og_image %}{% if primary_image and primary_image.image %}{{ request.scheme }}://{{ request.get_host }}{{ primary_image.image.url }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Trang chủ",
+      "item": "{{ request.scheme }}://{{ request.get_host }}/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Sản phẩm",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'catalog:product_list' %}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ product.category.name|escapejs }}",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{{ product.category.get_absolute_url }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "{{ product.name|escapejs }}",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}"
+    }
+  ]
+}
+</script>
+{# LƯU Ý MINH BẠCH SEO: Chưa thêm Product/Offer schema và tuyệt đối không tạo aggregateRating/giá/tình trạng tồn kho giả theo nguyên tắc biên tập và hướng dẫn kỹ thuật Google. #}
+{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="container">
+    <nav class="breadcrumb-nav" aria-label="Đường dẫn điều hướng">
+        <ol class="breadcrumb-list">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Trang chủ</a></li>
+            <li class="breadcrumb-separator" aria-hidden="true">/</li>
+            <li class="breadcrumb-item"><a href="{% url 'catalog:category_detail' slug=product.category.slug %}">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-separator" aria-hidden="true">/</li>
+            <li class="breadcrumb-item breadcrumb-current" aria-current="page">{{ product.name }}</li>
+        </ol>
+    </nav>
+</div>
+
+<!-- Chi tiết sản phẩm: Gallery & Tổng quan nơi bán -->
+<div class="container">
+    <div class="product-detail-layout">
+        <!-- Cột trái: Thư viện ảnh -->
+        <div class="product-gallery">
+            <div class="product-main-image">
+                {% if primary_image and primary_image.image %}
+                    <img id="product-main-img" src="{{ primary_image.image.url }}" alt="{{ primary_image.alt_text|default:product.name }}" loading="eager" fetchpriority="high" width="600" height="450" style="width: 100%; height: auto; object-fit: contain;">
+                {% else %}
+                    <div class="product-thumb-placeholder" style="font-size: 4rem;">
+                        {% if product.category.slug == 'chuot-may-tinh' %}🖱️
+                        {% elif product.category.slug == 'ban-phim' %}⌨️
+                        {% elif product.category.slug == 'gia-do-laptop' %}💻
+                        {% else %}⚡{% endif %}
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if images.count > 1 %}
+            <div class="gallery-thumbs" style="display: flex; gap: 10px; overflow-x: auto; padding: 4px 0;">
+                {% for img in images %}
+                <button type="button" class="gallery-thumb-btn {% if forloop.first %}active{% endif %}" data-img-src="{{ img.image.url }}" data-img-alt="{{ img.alt_text }}" style="border: 1px solid var(--border-color); background: white; border-radius: 6px; padding: 2px; width: 64px; height: 64px; cursor: pointer;">
+                    <img src="{{ img.image.url }}" alt="{{ img.alt_text }}" loading="lazy" width="60" height="60" style="width: 100%; height: 100%; object-fit: cover;">
+                </button>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Cột phải: Thông tin tổng quan & Nơi bán -->
+        <div class="product-summary-col">
+            <div>
+                <span class="product-brand" style="font-size: 0.9rem;">{{ product.brand }}</span>
+                <h1 class="page-title" style="margin-top: 4px; margin-bottom: 8px;">{{ product.name }}</h1>
+                {% if product.model %}
+                    <span class="badge badge-neutral" style="margin-bottom: 12px;">Mã model: {{ product.model }}</span>
+                {% endif %}
+                <p style="color: var(--text-secondary); font-size: 0.98rem; line-height: 1.6;">
+                    {{ product.short_description|default:"Sản phẩm được lựa chọn và tổng hợp thông số phục vụ góc học tập sinh viên." }}
+                </p>
+                <div style="margin-top: 10px; margin-bottom: 16px;">
+                    <a href="{% url 'catalog:compare' %}?p={{ product.slug }}" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem;">
+                        <span>⚖️ So sánh với phụ kiện cùng loại</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Khối Nơi bán & Giá tham khảo (Offers) -->
+            <div class="offers-box" id="offers-section">
+                <div class="offers-title">
+                    <span>Nơi bán tham khảo</span>
+                    <span class="badge badge-neutral">{{ offers.count }} đối tác liên kết</span>
+                </div>
+
+                {% if offers %}
+                <div class="offers-list">
+                    {% for offer in offers %}
+                    <div class="offer-item">
+                        <div>
+                            <div class="offer-merchant-name">
+                                🏪 {{ offer.merchant.name }}
+                            </div>
+                            {% if offer.price_checked_at %}
+                                <div class="offer-time-hint">
+                                    Cập nhật giá: {{ offer.price_checked_at|date:"d/m/Y" }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="offer-price-info">
+                            {% if offer.price %}
+                                <div class="offer-price">
+                                    {{ offer.price|floatformat:0 }} {{ offer.currency }}
+                                </div>
+                            {% else %}
+                                <div class="price-none">Chưa rõ giá</div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <a href="{{ offer.get_destination_url }}" 
+                               target="_blank" 
+                               rel="noopener noreferrer sponsored" 
+                               class="btn btn-affiliate btn-sm" 
+                               data-track-click="true"
+                               data-offer-id="{{ offer.id }}"
+                               data-link-mode="{{ offer.get_effective_link_mode }}"
+                               title="Mở website chính thức của {{ offer.merchant.name }} trong tab mới (Liên kết đối tác thương mại)">
+                                <span>🏪 Xem tại {{ offer.merchant.name }}</span>
+                                <span aria-hidden="true">&nearr;</span>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="affiliate-disclosure-note" style="margin-top: 14px; font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; padding: 8px 12px; background: var(--bg-surface); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    ⚖️ <em>Minh bạch tài trợ: Mức giá hiển thị là giá tham khảo tại thời điểm kiểm tra. Khi bạn bấm chuyển đến nơi bán và mua hàng, Góc Phụ Kiện có thể nhận được một khoản hoa hồng nhỏ từ đối tác phân phối mà không làm tăng giá sản phẩm của bạn. Điều này giúp chúng tôi duy trì các bài đánh giá độc lập.</em>
+                </div>
+                {% else %}
+                <div class="empty-state" style="padding: 24px 16px; margin: 0;">
+                    <div style="font-size: 1.8rem; margin-bottom: 8px;">🛒</div>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+                        Hiện chưa có nơi bán liên kết nào cho sản phẩm này. Ban biên tập đang cập nhật thêm các đơn vị phân phối uy tín.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bảng thông số kỹ thuật chi tiết -->
+<section class="section" style="background-color: var(--bg-surface); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+    <div class="container">
+        <div class="section-header-compact">
+            <h2 class="section-title" style="font-size: 1.4rem;">Thông Số Kỹ Thuật Chi Tiết</h2>
+            <p class="section-subtitle">Dữ liệu được trích xuất từ tài liệu công bố của nhà sản xuất.</p>
+        </div>
+
+        {% if specifications %}
+        <div class="spec-table-wrapper">
+            <table class="spec-table">
+                <tbody>
+                    <tr>
+                        <th scope="row">Thương hiệu</th>
+                        <td>{{ product.brand }}</td>
+                    </tr>
+                    {% if product.model %}
+                    <tr>
+                        <th scope="row">Model</th>
+                        <td>{{ product.model }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th scope="row">Danh mục</th>
+                        <td>{{ product.category.name }}</td>
+                    </tr>
+                    {% for spec in specifications %}
+                    <tr>
+                        <th scope="row">
+                            {{ spec.specification_definition.name }}
+                            {% if spec.specification_definition.unit %}
+                                <span style="font-weight: normal; color: var(--text-muted);">({{ spec.specification_definition.unit }})</span>
+                            {% endif %}
+                        </th>
+                        <td>{{ spec.value }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding: 32px 20px;">
+            <p style="color: var(--text-secondary); margin: 0;">Thông số kỹ thuật chi tiết cho sản phẩm này đang được cập nhật.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Bài viết liên quan đến sản phẩm -->
+{% if related_articles %}
+<section class="section">
+    <div class="container">
+        <div class="section-header-compact">
+            <h2 class="section-title" style="font-size: 1.4rem;">Bài Viết & Đánh Giá Liên Quan</h2>
+            <p class="section-subtitle">Các bài viết phân tích, cẩm nang có nhắc đến {{ product.name }}.</p>
+        </div>
+
+        <div class="articles-grid">
+            {% for art in related_articles %}
+            <article class="article-card">
+                <div class="article-body">
+                    <div class="article-meta">
+                        <span class="badge badge-primary">{{ art.get_article_type_display }}</span>
+                        <span>{{ art.published_at|date:"d/m/Y" }}</span>
+                    </div>
+                    <h3 class="article-title" style="font-size: 1.05rem;">
+                        <a href="{% url 'content:article_detail' slug=art.slug %}">{{ art.title }}</a>
+                    </h3>
+                    <p class="article-summary">{{ art.summary|truncatewords:20 }}</p>
+                    <a href="{% url 'content:article_detail' slug=art.slug %}" style="font-weight: 600; color: var(--primary); font-size: 0.85rem;">Đọc bài viết &rarr;</a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Sản phẩm cùng danh mục gợi ý -->
+{% if similar_products %}
+<section class="section" style="padding-top: 0;">
+    <div class="container">
+        <div class="section-header-compact">
+            <h2 class="section-title" style="font-size: 1.3rem;">Mẫu Khác Trong Cùng Danh Mục</h2>
+        </div>
+        <div class="products-grid">
+            {% for prod in similar_products %}
+            <article class="product-card">
+                <div class="product-body">
+                    <span class="product-brand">{{ prod.brand }}</span>
+                    <h3 class="product-name" style="font-size: 0.98rem;">
+                        <a href="{% url 'catalog:product_detail' slug=prod.slug %}">{{ prod.name }}</a>
+                    </h3>
+                    <div class="product-footer" style="gap: 6px;">
+                        <span class="product-price" style="font-size: 0.9rem;">
+                            {% if prod.min_price %}từ {{ prod.min_price|floatformat:0 }} đ{% else %}Chưa có giá{% endif %}
+                        </span>
+                        <div style="display: flex; gap: 4px;">
+                            <a href="{% url 'catalog:compare' %}?p={{ product.slug }}&p={{ prod.slug }}" class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 0.78rem;" title="So sánh đối đầu 2 mẫu">
+                                ⚖️ So sánh
+                            </a>
+                            <a href="{% url 'catalog:product_detail' slug=prod.slug %}" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.78rem;">
+                                Xem
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

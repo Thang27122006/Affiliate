@@ -5,79 +5,164 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>{% block title %}Góc Phụ Kiện - Đánh giá, so sánh phụ kiện học tập & làm việc sinh viên{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}Góc Phụ Kiện - Nền tảng đánh giá và so sánh thực tế phụ kiện học tập, làm việc: chuột, bàn phím, giá đỡ laptop dành riêng cho học sinh, sinh viên.{% endblock %}">
-    
+    <title>{% block title %}Góc Phụ Kiện - Đánh giá & So sánh phụ kiện học tập, làm việc sinh viên{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Góc Phụ Kiện - Nền tảng đánh giá và so sánh thực tế chuột máy tính, bàn phím và giá đỡ laptop tối ưu ngân sách cho sinh viên.{% endblock %}">
+
+    <!-- Canonical URL động theo domain thực tế -->
+    <link rel="canonical" href="{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}">
+
+    <!-- Điều hướng bot tìm kiếm (mặc định index, follow; các trang tìm kiếm/lọc sâu ghi đè noindex) -->
+    {% block meta_robots %}
+    <meta name="robots" content="index, follow">
+    {% endblock %}
+
+    <!-- Open Graph Metadata (Facebook, Zalo, LinkedIn) -->
+    <meta property="og:site_name" content="Góc Phụ Kiện">
+    <meta property="og:locale" content="vi_VN">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{% block title_content %}Góc Phụ Kiện - Đánh giá & So sánh phụ kiện học tập sinh viên{% endblock %}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Chuyên trang đánh giá và so sánh thực tế phụ kiện công nghệ học tập và làm việc dành cho sinh viên.{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.png' %}{% endblock %}">
+
+    <!-- Twitter Card Metadata -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}{% block title_tw %}Góc Phụ Kiện - Phụ kiện học tập sinh viên{% endblock %}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Đánh giá & so sánh chuột, bàn phím, giá đỡ laptop công thái học cho sinh viên.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.png' %}{% endblock %}">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
-    <!-- Custom Stylesheet -->
+
+    <!-- Custom CSS (Vanilla Clean Editorial) -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
+
+    <!-- Structured Data JSON-LD (Schema.org) -->
+    {% block structured_data %}{% endblock %}
 </head>
+
 <body>
+    <!-- Site Header -->
     <header class="site-header" id="site-header">
         <div class="container header-container">
-            <a href="{% url 'core:home' %}" class="logo" id="site-logo">
-                <span class="logo-icon">⚡</span>
-                <span class="logo-text">Góc Phụ Kiện</span>
-                <span class="badge badge-subtle">Học tập & Làm việc</span>
+            <a href="{% url 'core:home' %}" class="logo" id="site-logo" aria-label="Góc Phụ Kiện - Trang chủ">
+                <span class="logo-text">⚡ Góc Phụ Kiện</span>
+                <span class="logo-badge">Sinh viên</span>
             </a>
-            
-            <nav class="main-nav" id="main-nav">
-                <a href="#categories" class="nav-link">Danh mục</a>
-                <a href="#architecture" class="nav-link">Kiến trúc</a>
-                <a href="#tech-specs" class="nav-link">Hệ thống</a>
-                <a href="/admin/" class="btn btn-secondary btn-sm" id="btn-admin-portal">
-                    <span>Quản trị (Admin)</span>
-                </a>
+
+            <!-- Search Bar in Header -->
+            <div class="header-search">
+                <form action="{% url 'core:search' %}" method="get" class="search-form" role="search">
+                    <span class="search-icon" aria-hidden="true">🔍</span>
+                    <input type="search" name="q" class="search-input" placeholder="Tìm chuột, bàn phím..." value="{{ request.GET.q|default:'' }}" aria-label="Tìm kiếm sản phẩm hoặc bài viết">
+                </form>
+            </div>
+
+            <!-- Navigation Links: Trang chủ | Bài viết | Phương pháp | Sản phẩm ▾ -->
+            <nav class="main-nav" id="main-nav" aria-label="Menu chính">
+                <a href="{% url 'core:home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">Trang chủ</a>
+                <a href="{% url 'content:article_list' %}" class="nav-link {% if request.resolver_match.app_name == 'content' %}active{% endif %}">Bài viết</a>
+                <a href="{% url 'core:about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">Phương pháp</a>
+
+                <!-- Dropdown Sản phẩm (Mở bằng nút nhấn, bàn phím Tab/Enter/Space/Escape) -->
+                <div class="nav-dropdown" id="nav-dropdown-products">
+                    <button type="button" 
+                            class="nav-link nav-dropdown-btn {% if request.resolver_match.app_name == 'catalog' %}active{% endif %}" 
+                            id="products-dropdown-btn" 
+                            aria-expanded="false" 
+                            aria-haspopup="true" 
+                            aria-controls="products-dropdown-menu">
+                        <span>Sản phẩm</span>
+                        <span class="dropdown-chevron" aria-hidden="true">▾</span>
+                    </button>
+
+                    <div class="dropdown-menu" id="products-dropdown-menu" role="menu" aria-labelledby="products-dropdown-btn">
+                        <a href="{% url 'catalog:product_list' %}" 
+                           class="dropdown-item {% if request.resolver_match.url_name == 'product_list' and not request.GET.category %}active{% endif %}" 
+                           role="menuitem">
+                            📦 <strong>Tất cả sản phẩm</strong>
+                        </a>
+                        <div class="dropdown-divider" role="separator"></div>
+                        {% for cat in nav_categories %}
+                            <a href="{% url 'catalog:category_detail' slug=cat.slug %}" 
+                               class="dropdown-item {% if category.slug == cat.slug or product.category.slug == cat.slug or request.GET.category == cat.slug %}active{% endif %}" 
+                               role="menuitem">
+                                {% if cat.slug == 'ban-phim' %}⌨️ 
+                                {% elif cat.slug == 'chuot-may-tinh' %}🖱️ 
+                                {% elif cat.slug == 'gia-do-laptop' %}💻 
+                                {% else %}⚡ {% endif %}
+                                {{ cat.name }}
+                            </a>
+                        {% endfor %}
+                        <div class="dropdown-divider" role="separator"></div>
+                        <a href="{% url 'catalog:compare' %}" 
+                           class="dropdown-item {% if request.resolver_match.url_name == 'compare' %}active{% endif %}" 
+                           role="menuitem">
+                            ⚖️ <strong>So sánh đối đầu</strong>
+                        </a>
+                    </div>
+                </div>
             </nav>
+
+            <!-- Mobile Menu Toggle Button -->
+            <button class="menu-toggle" id="menu-toggle" aria-label="Mở menu điều hướng" aria-expanded="false">
+                ☰
+            </button>
         </div>
     </header>
 
+    <!-- Main Content Area -->
     <main class="main-content" id="main-content">
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Site Footer -->
     <footer class="site-footer" id="site-footer">
-        <div class="container footer-container">
+        <div class="container footer-grid">
             <div class="footer-brand">
-                <div class="logo">
-                    <span class="logo-icon">⚡</span>
-                    <span class="logo-text">Góc Phụ Kiện</span>
-                </div>
-                <p class="footer-desc">
-                    Website đánh giá, so sánh phụ kiện công nghệ học tập và làm việc tối ưu ngân sách cho sinh viên.
+                <a href="{% url 'core:home' %}" class="logo">
+                    <span class="logo-text">⚡ Góc Phụ Kiện</span>
+                </a>
+                <p class="footer-bio">
+                    Chuyên trang đánh giá và so sánh thực tế phụ kiện công nghệ học tập và làm việc.
+                    Tối ưu không gian học tập, giữ đúng tư thế và phù hợp ngân sách sinh viên.
                 </p>
-                <div class="footer-disclaimer">
-                    <small>⚠️ Lưu ý: Website tham gia tiếp thị liên kết và không trực tiếp phân phối hay lưu trữ đơn hàng.</small>
+                <div class="footer-affiliate-note">
+                    <small>📢 <strong>Minh bạch tiếp thị:</strong> Website có thể nhận hoa hồng nhỏ khi bạn mua hàng qua liên kết đối tác. Giá mua của bạn hoàn toàn không bị thay đổi.</small>
                 </div>
             </div>
-            
-            <div class="footer-links">
-                <h4>Danh mục ban đầu</h4>
-                <ul>
-                    <li><a href="#cat-chuot">🖱️ Chuột máy tính</a></li>
-                    <li><a href="#cat-ban-phim">⌨️ Bàn phím cơ & văn phòng</a></li>
-                    <li><a href="#cat-gia-do-laptop">💻 Giá đỡ laptop công thái học</a></li>
+
+            <div class="footer-col">
+                <h4 class="footer-heading">Danh mục trọng tâm</h4>
+                <ul class="footer-links">
+                    <li><a href="{% url 'catalog:category_detail' slug='chuot-may-tinh' %}">🖱️ Chuột máy tính silent</a></li>
+                    <li><a href="{% url 'catalog:category_detail' slug='ban-phim' %}">⌨️ Bàn phím cơ & di động</a></li>
+                    <li><a href="{% url 'catalog:category_detail' slug='gia-do-laptop' %}">💻 Giá đỡ laptop công thái học</a></li>
+                    <li><a href="{% url 'catalog:compare' %}">⚖️ So sánh đối đầu</a></li>
+                    <li><a href="{% url 'content:article_list' %}">📝 Tất cả bài đánh giá</a></li>
                 </ul>
             </div>
-            
-            <div class="footer-links">
-                <h4>Hệ thống</h4>
-                <ul>
-                    <li><a href="/health/" target="_blank">Health Check API</a></li>
-                    <li><a href="/admin/">Django Admin Portal</a></li>
-                    <li><a href="https://github.com" target="_blank" rel="noopener">Quy ước dự án</a></li>
+
+            <div class="footer-col">
+                <h4 class="footer-heading">Về chúng tôi</h4>
+                <ul class="footer-links">
+                    <li><a href="{% url 'core:about' %}">Phương pháp đánh giá</a></li>
+                    <li><a href="{% url 'core:about' %}#correction-policy">Chính sách sửa thông tin sai</a></li>
+                    <li><a href="{% url 'core:about' %}#affiliate-policy">Minh bạch tiếp thị liên kết</a></li>
+                    <li><a href="{% url 'core:privacy_policy' %}">Chính sách quyền riêng tư</a></li>
+                    <li><a href="/admin/">Cổng quản trị nội dung</a></li>
+                    <li><a href="{% url 'core:health_check' %}">Kiểm tra hệ thống</a></li>
                 </ul>
             </div>
         </div>
-        
+
+
         <div class="footer-bottom">
             <div class="container">
-                <p>&copy; 2026 Góc Phụ Kiện. Nền tảng Django monolith & PostgreSQL. Giờ hệ thống: Asia/Ho_Chi_Minh.</p>
+                <p>&copy; 2026 Góc Phụ Kiện. Mọi thông tin đều hướng tới quyền lợi người học. Giờ hệ thống: Asia/Ho_Chi_Minh.</p>
             </div>
         </div>
     </footer>

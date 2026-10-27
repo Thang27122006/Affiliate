@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container section" style="padding-top: 24px; padding-bottom: 60px;">
+    <!-- Header Báo cáo & Phím tắt quản trị -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge badge-primary">🔒 Dành riêng cho Quản trị viên (Staff Only)</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Múi giờ: {{ timezone_name }}</span>
+            </div>
+            <h1 class="page-title" style="font-size: 1.8rem; margin: 8px 0 4px 0;">Báo Cáo Hiệu Quả & Đối Soát Tiếp Thị Liên Kết</h1>
+            <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;">
+                Dữ liệu phân tích nội bộ và đối soát hoa hồng từ các đối tác thương mại điện tử.
+            </p>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <a href="{% url 'analytics:reconciliation_import' %}" class="btn btn-primary btn-sm">
+                📥 Nhập CSV đối soát
+            </a>
+            <a href="/admin/analytics/affiliateconversion/" class="btn btn-secondary btn-sm">
+                ⚙️ Quản lý giao dịch
+            </a>
+            <a href="/admin/" class="btn btn-outline btn-sm">
+                Trang Admin &rarr;
+            </a>
+        </div>
+    </div>
+
+    <!-- Thanh lọc khoảng ngày -->
+    <form method="get" action="{% url 'analytics:dashboard' %}" class="card" style="padding: 16px 20px; margin-bottom: 28px; background: white;">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px;">
+            <div style="font-weight: 600; color: var(--text-main); font-size: 0.92rem;">
+                📅 Khoảng ngày báo cáo:
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label for="start_date" style="font-size: 0.85rem; color: var(--text-muted);">Từ ngày:</label>
+                <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="form-control" style="padding: 6px 10px; font-size: 0.88rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label for="end_date" style="font-size: 0.85rem; color: var(--text-muted);">Đến ngày:</label>
+                <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="form-control" style="padding: 6px 10px; font-size: 0.88rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button type="submit" class="btn btn-primary btn-sm" style="padding: 6px 14px;">Lọc dữ liệu</button>
+                <a href="{% url 'analytics:dashboard' %}" class="btn btn-outline btn-sm" style="padding: 6px 12px;" title="Đặt lại 30 ngày gần nhất">30 ngày qua</a>
+            </div>
+        </div>
+    </form>
+
+    <!-- KHỐI 1: SỐ LIỆU ĐO ĐẠC NỘI BỘ (WEBSITE ĐO) -->
+    <div style="margin-bottom: 36px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px;">
+            <h2 style="font-size: 1.25rem; margin: 0; color: var(--text-main);">
+                📊 1. Thống Kê Nội Bộ Website Đo Đạc
+            </h2>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Đo lường bằng mã nguồn hệ thống</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px;">
+            <!-- Lượt xem trang -->
+            <div class="card" style="padding: 18px 20px; background: white; border-top: 3px solid #3b82f6;">
+                <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Tổng lượt xem (Page Views)</div>
+                <div style="font-size: 1.8rem; font-weight: 700; color: #1e293b; margin: 6px 0;">{{ total_page_views|default:"0" }}</div>
+                <div style="font-size: 0.78rem; color: var(--text-secondary);">
+                    🏷️ Sản phẩm: <strong>{{ product_views_count }}</strong> | 📝 Bài viết: <strong>{{ article_views_count }}</strong>
+                </div>
+            </div>
+
+            <!-- Lượt bấm affiliate -->
+            <div class="card" style="padding: 18px 20px; background: white; border-top: 3px solid var(--primary);">
+                <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Lượt bấm Nơi bán (Clicks)</div>
+                <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin: 6px 0;">{{ total_clicks_count|default:"0" }}</div>
+                <div style="font-size: 0.78rem; color: var(--text-secondary);">
+                    Gồm cả liên kết trực tiếp & chuyển hướng
+                </div>
+            </div>
+
+            <!-- Tỷ lệ CTR sự kiện -->
+            <div class="card" style="padding: 18px 20px; background: white; border-top: 3px solid #10b981;">
+                <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Tỷ lệ CTR theo Sự kiện</div>
+                <div style="font-size: 1.8rem; font-weight: 700; color: #10b981; margin: 6px 0;">
+                    {% if overall_event_ctr is not None %}
+                        {{ overall_event_ctr|floatformat:2 }}%
+                    {% else %}
+                        <span style="font-size: 1.1rem; color: var(--text-muted); font-weight: normal;">Chưa có lượt xem</span>
+                    {% endif %}
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                    ⚠️ Tỷ lệ (Clicks/Views), không phải Unique Users
+                </div>
+            </div>
+        </div>
+
+        <!-- Bảng Top Sản Phẩm Có Nhiều Lượt Bấm -->
+        <div class="card" style="padding: 20px; background: white; margin-bottom: 20px;">
+            <h3 style="font-size: 1.05rem; margin-top: 0; margin-bottom: 14px;">🏆 Top Sản Phẩm Có Nhiều Lượt Bấm Nhất</h3>
+            {% if top_products %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+                    <thead>
+                        <tr style="background: var(--bg-surface); text-align: left; border-bottom: 2px solid var(--border-color);">
+                            <th style="padding: 10px 12px;">Sản phẩm</th>
+                            <th style="padding: 10px 12px; text-align: center;">Lượt bấm (Clicks)</th>
+                            <th style="padding: 10px 12px; text-align: center;">Lượt xem trang (Views)</th>
+                            <th style="padding: 10px 12px; text-align: right;">Tỷ lệ CTR sự kiện</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prod in top_products %}
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 10px 12px;">
+                                <a href="{% url 'catalog:product_detail' slug=prod.slug %}" target="_blank" style="font-weight: 600; color: var(--text-main);">
+                                    {{ prod.name }} ↗
+                                </a>
+                            </td>
+                            <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: var(--primary);">
+                                {{ prod.clicks }}
+                            </td>
+                            <td style="padding: 10px 12px; text-align: center; color: var(--text-secondary);">
+                                {{ prod.views }}
+                            </td>
+                            <td style="padding: 10px 12px; text-align: right;">
+                                {% if prod.ctr is not None %}
+                                    <span style="font-weight: 600; color: #10b981;">{{ prod.ctr|floatformat:1 }}%</span>
+                                {% else %}
+                                    <span style="color: var(--text-muted); font-size: 0.8rem;">(0 view)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="color: var(--text-muted); font-style: italic; padding: 12px 0;">Chưa ghi nhận lượt bấm nào trong khoảng thời gian này.</div>
+            {% endif %}
+        </div>
+
+        <!-- Hai bảng con: Top Nơi bán & Top Nguồn Bấm -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+            <div class="card" style="padding: 18px; background: white;">
+                <h3 style="font-size: 1rem; margin-top: 0; margin-bottom: 12px;">🏪 Nơi Bán Được Quan Tâm Nhất</h3>
+                {% if top_merchants %}
+                <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.88rem;">
+                    {% for m in top_merchants %}
+                    <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                        <span>{{ m.offer__merchant__name }}</span>
+                        <strong>{{ m.clicks }} clicks</strong>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div style="color: var(--text-muted); font-style: italic;">Chưa có dữ liệu.</div>
+                {% endif %}
+            </div>
+
+            <div class="card" style="padding: 18px; background: white;">
+                <h3 style="font-size: 1rem; margin-top: 0; margin-bottom: 12px;">📑 Trang Nguồn Phát Sinh Lượt Bấm</h3>
+                {% if top_referrers %}
+                <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.85rem;">
+                    {% for ref in top_referrers %}
+                    <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color); gap: 8px;">
+                        <span style="word-break: break-all; color: var(--text-secondary);">{{ ref.referrer_path }}</span>
+                        <strong style="white-space: nowrap;">{{ ref.clicks }} clicks</strong>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div style="color: var(--text-muted); font-style: italic;">Chưa có dữ liệu trang nguồn.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- KHỐI 2: ĐỐI SOÁT TỪ ĐỐI TÁC TIẾP THỊ LIÊN KẾT (TỪ CSV) -->
+    <div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px;">
+            <h2 style="font-size: 1.25rem; margin: 0; color: var(--text-main);">
+                💰 2. Đối Soát Hoa Hồng Từ Đối Tác (Báo Cáo Đối Soát)
+            </h2>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Dữ liệu ghi nhận từ sàn đối tác (chưa tích hợp API trực tiếp)</span>
+        </div>
+
+        <!-- Các thẻ Hoa Hồng Tách Biệt Theo Trạng Thái & Tiền Tệ -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px;">
+            <!-- Hoa hồng đã duyệt -->
+            <div class="card" style="padding: 18px 20px; background: white; border-left: 4px solid #10b981;">
+                <div style="font-size: 0.82rem; color: #047857; font-weight: 600; text-transform: uppercase;">✓ Hoa hồng Đã Duyệt (Approved)</div>
+                <div style="margin-top: 8px;">
+                    {% if commissions_by_status.approved %}
+                        {% for c in commissions_by_status.approved %}
+                        <div style="margin-bottom: 4px;">
+                            <span style="font-size: 1.5rem; font-weight: 700; color: #10b981;">
+                                {{ c.total|floatformat:2 }} {{ c.currency }}
+                            </span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">({{ c.count }} đơn)</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <span style="font-size: 1.3rem; font-weight: 600; color: var(--text-muted);">0.00</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Hoa hồng chờ duyệt -->
+            <div class="card" style="padding: 18px 20px; background: white; border-left: 4px solid #f59e0b;">
+                <div style="font-size: 0.82rem; color: #b45309; font-weight: 600; text-transform: uppercase;">⏳ Hoa hồng Chờ Duyệt (Pending)</div>
+                <div style="margin-top: 8px;">
+                    {% if commissions_by_status.pending %}
+                        {% for c in commissions_by_status.pending %}
+                        <div style="margin-bottom: 4px;">
+                            <span style="font-size: 1.5rem; font-weight: 700; color: #f59e0b;">
+                                {{ c.total|floatformat:2 }} {{ c.currency }}
+                            </span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">({{ c.count }} đơn)</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <span style="font-size: 1.3rem; font-weight: 600; color: var(--text-muted);">0.00</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Hoa hồng bị từ chối -->
+            <div class="card" style="padding: 18px 20px; background: white; border-left: 4px solid #ef4444;">
+                <div style="font-size: 0.82rem; color: #b91c1c; font-weight: 600; text-transform: uppercase;">✕ Hoa hồng Bị Từ Chối (Rejected)</div>
+                <div style="margin-top: 8px;">
+                    {% if commissions_by_status.rejected %}
+                        {% for c in commissions_by_status.rejected %}
+                        <div style="margin-bottom: 4px;">
+                            <span style="font-size: 1.5rem; font-weight: 700; color: #ef4444;">
+                                {{ c.total|floatformat:2 }} {{ c.currency }}
+                            </span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">({{ c.count }} đơn)</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <span style="font-size: 1.3rem; font-weight: 600; color: var(--text-muted);">0.00</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Bảng Hoa Hồng Theo Sản Phẩm Đối Chiếu Được -->
+        {% if matched_products_stats %}
+        <div class="card" style="padding: 20px; background: white; margin-bottom: 24px;">
+            <h3 style="font-size: 1.05rem; margin-top: 0; margin-bottom: 12px;">📦 Hoa Hồng Theo Sản Phẩm Đối Chiếu Được (Qua Tracking Tag)</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: -6px; margin-bottom: 12px;">
+                Chỉ tổng hợp cho các đơn hàng có mã tracking hợp lệ từ đối tác. Hệ thống không phỏng đoán theo thời gian gần nhau.
+            </p>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+                    <thead>
+                        <tr style="background: var(--bg-surface); text-align: left; border-bottom: 2px solid var(--border-color);">
+                            <th style="padding: 10px 12px;">Sản phẩm</th>
+                            <th style="padding: 10px 12px; text-align: center;">Trạng thái</th>
+                            <th style="padding: 10px 12px; text-align: center;">Số lượng đơn</th>
+                            <th style="padding: 10px 12px; text-align: right;">Tổng hoa hồng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in matched_products_stats %}
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 10px 12px; font-weight: 600;">{{ row.matched_product__name }}</td>
+                            <td style="padding: 10px 12px; text-align: center;">
+                                {% if row.status == 'approved' %}
+                                    <span style="color: #10b981; font-weight: 600;">Đã duyệt</span>
+                                {% elif row.status == 'pending' %}
+                                    <span style="color: #f59e0b; font-weight: 600;">Chờ duyệt</span>
+                                {% else %}
+                                    <span style="color: #ef4444; font-weight: 600;">Từ chối</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 10px 12px; text-align: center;">{{ row.order_count }}</td>
+                            <td style="padding: 10px 12px; text-align: right; font-weight: 600;">
+                                {{ row.total_commission|floatformat:2 }} {{ row.currency }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Bảng Danh Sách Giao Dịch Gần Nhất -->
+        <div class="card" style="padding: 20px; background: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="font-size: 1.05rem; margin: 0;">📋 Giao Dịch Đối Soát Gần Nhất (Tối đa 25 bản ghi)</h3>
+                <span style="font-size: 0.82rem; color: var(--text-muted);">Tổng số: {{ total_conversions_count }} giao dịch</span>
+            </div>
+
+            {% if recent_conversions %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                    <thead>
+                        <tr style="background: var(--bg-surface); text-align: left; border-bottom: 2px solid var(--border-color);">
+                            <th style="padding: 8px 10px;">Chương trình</th>
+                            <th style="padding: 8px 10px;">Mã giao dịch / Dòng</th>
+                            <th style="padding: 8px 10px;">Thời gian</th>
+                            <th style="padding: 8px 10px; text-align: center;">Trạng thái</th>
+                            <th style="padding: 8px 10px; text-align: right;">Hoa hồng</th>
+                            <th style="padding: 8px 10px;">Đối chiếu nguồn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in recent_conversions %}
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 8px 10px; font-weight: 600;">{{ item.program_name }}</td>
+                            <td style="padding: 8px 10px;">
+                                <code>{{ item.external_transaction_id }}</code>
+                                {% if item.external_order_item_id %}
+                                    <span style="color: var(--text-muted); font-size: 0.78rem;">/ {{ item.external_order_item_id }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 8px 10px; color: var(--text-secondary); font-size: 0.8rem;">
+                                {{ item.transaction_time|date:"d/m/Y H:i" }}
+                            </td>
+                            <td style="padding: 8px 10px; text-align: center;">
+                                {% if item.status == 'approved' %}
+                                    <span style="background: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Đã duyệt</span>
+                                {% elif item.status == 'pending' %}
+                                    <span style="background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Chờ duyệt</span>
+                                {% else %}
+                                    <span style="background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Từ chối</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 8px 10px; text-align: right; font-weight: 600;">
+                                {{ item.commission_amount|floatformat:2 }} {{ item.currency }}
+                            </td>
+                            <td style="padding: 8px 10px; font-size: 0.8rem;">
+                                {% if item.matched_product %}
+                                    <span title="Khớp sản phẩm">🏷️ {{ item.matched_product.name|truncatewords:4 }}</span>
+                                {% elif item.matched_article %}
+                                    <span title="Khớp bài viết">📝 {{ item.matched_article.title|truncatewords:4 }}</span>
+                                {% elif item.tracking_code %}
+                                    <span style="color: var(--text-muted);">Tag: {{ item.tracking_code }}</span>
+                                {% else %}
+                                    <span style="color: var(--text-muted); font-style: italic;">Chưa đối chiếu</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="padding: 16px; text-align: center; color: var(--text-muted); font-style: italic;">
+                Chưa có dữ liệu đối soát nào trong khoảng ngày này. Bạn có thể <a href="{% url 'analytics:reconciliation_import' %}" style="color: var(--primary); font-weight: 600;">Nhập file CSV đối soát tại đây</a>.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Thông điệp minh bạch kỹ thuật & Nguyên tắc vận hành -->
+    <div style="margin-top: 36px; padding: 16px 20px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.82rem; color: var(--text-muted); line-height: 1.6;">
+        <strong>💡 Nguyên Tắc & Giới Hạn Của Dữ Liệu Báo Cáo:</strong>
+        <ul style="margin: 6px 0 0 16px; padding: 0;">
+            <li><strong>Số liệu website đo (Views, Clicks):</strong> Đo lường sự kiện kỹ thuật trên server/trình duyệt. Không đại diện cho số người dùng duy nhất (Unique Visitors); có thể bị ảnh hưởng bởi bot tìm kiếm hoặc trình chặn quảng cáo.</li>
+            <li><strong>Số liệu đối soát đối tác (Hoa hồng):</strong> Được nhập từ file báo cáo định kỳ của từng sàn thương mại điện tử (Shopee, Tiki, Lazada...). Website chưa tích hợp API tự động khi chưa có thông tin xác thực chính thức.</li>
+            <li><strong>Đơn vị tiền tệ:</strong> Hệ thống tách bạch tuyệt đối các loại tiền tệ (VND, USD...), không cộng gộp số học giữa các đơn vị tiền tệ khác nhau.</li>
+            <li><strong>Bảo vệ quyền riêng tư:</strong> Toàn bộ dữ liệu tuyệt đối không lưu địa chỉ IP thô, fingerprint, cookies theo dõi độc giả hay thông tin cá nhân của người mua hàng (tên, số điện thoại, địa chỉ).</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

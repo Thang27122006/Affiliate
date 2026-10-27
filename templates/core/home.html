@@ -1,129 +1,199 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Trang chủ - Góc Phụ Kiện | Đánh giá & So sánh phụ kiện sinh viên{% endblock %}
+{% block title %}Góc Phụ Kiện - Đánh giá, so sánh chuột, bàn phím, giá đỡ laptop sinh viên{% endblock %}
+{% block meta_description %}Website đánh giá trung thực, so sánh thông số kỹ thuật chuột, bàn phím, giá đỡ laptop chuẩn ngân sách cho học tập và làm việc sinh viên.{% endblock %}
+
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}/{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Góc Phụ Kiện",
+  "url": "{{ request.scheme }}://{{ request.get_host }}/",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "{{ request.scheme }}://{{ request.get_host }}{% url 'core:search' %}?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+{% endblock %}
 
 {% block content %}
-<section class="hero-section" id="hero">
-    <div class="container hero-container">
-        <div class="hero-badge">
-            <span class="status-dot status-dot-active"></span>
-            <span>Khởi tạo nền tảng thành công</span>
-        </div>
-        <h1 class="hero-title">
-            Đánh giá & So sánh <span class="gradient-text">Phụ Kiện Học Tập</span> Chuẩn Sinh Viên
+<!-- Hero Editorial Section -->
+<section class="hero-editorial">
+    <div class="container hero-editorial-content">
+        <span class="hero-tagline">Góc học tập & làm việc sinh viên</span>
+        <h1 class="hero-editorial-title">
+            Đánh giá trung thực, chọn phụ kiện chuẩn cho góc học tập của bạn
         </h1>
-        <p class="hero-subtitle">
-            Nền tảng cung cấp thông tin trung thực, so sánh thực tế chuột máy tính, bàn phím và giá đỡ laptop
-            giúp bạn tối ưu không gian bàn học và ngân sách học tập.
+        <p class="hero-editorial-desc">
+            Không quảng cáo thổi phồng. Chúng tôi tập trung so sánh thông số thực tế, trải nghiệm gõ phím, rê chuột êm ái
+            và khả năng nâng đỡ tư thế của các dòng phụ kiện tối ưu cho ngân sách sinh viên.
         </p>
-
-        <div class="system-status-box">
-            <div class="status-row">
-                <span class="status-label">Trạng thái cơ sở dữ liệu:</span>
-                {% if db_connected %}
-                    <span class="badge badge-success">
-                        <span class="status-dot status-dot-success"></span> PostgreSQL Đã kết nối
-                    </span>
-                {% else %}
-                    <span class="badge badge-error">
-                        <span class="status-dot status-dot-error"></span> Lỗi kết nối DB: {{ db_error }}
-                    </span>
-                {% endif %}
-            </div>
-            <div class="status-row">
-                <span class="status-label">Kiến trúc:</span>
-                <span class="badge badge-neutral">Django Monolith + PostgreSQL</span>
-            </div>
-            <div class="status-row">
-                <span class="status-label">Múi giờ & Ngôn ngữ:</span>
-                <span class="badge badge-neutral">Asia/Ho_Chi_Minh | Tiếng Việt</span>
-            </div>
-        </div>
-
         <div class="hero-actions">
-            <a href="#categories" class="btn btn-primary" id="btn-explore-categories">
-                <span>Khám phá 3 danh mục ban đầu</span>
-                <span class="btn-arrow">↓</span>
+            <a href="{% url 'content:article_list' %}" class="btn btn-primary" id="btn-hero-reviews">
+                Đọc bài đánh giá mới nhất
             </a>
-            <a href="/admin/" class="btn btn-outline" id="btn-view-admin">
-                <span>Django Admin</span>
+            <a href="{% url 'core:about' %}" class="btn btn-secondary" id="btn-hero-methodology">
+                Phương pháp đánh giá độc lập
             </a>
         </div>
     </div>
 </section>
 
-<!-- Danh mục ban đầu: Chuột, Bàn phím, Giá đỡ laptop -->
-<section class="section categories-section" id="categories">
+<!-- 3 Danh mục trọng tâm -->
+<section class="section">
     <div class="container">
         <div class="section-header">
-            <span class="section-tag">Phạm vi giai đoạn 1</span>
-            <h2 class="section-title">Danh Mục Phụ Kiện Trọng Tâm</h2>
-            <p class="section-subtitle">Ba dòng phụ kiện thiết yếu nhất cho góc học tập và làm việc của sinh viên hiện đại.</p>
+            <div>
+                <h2 class="section-title">Danh Mục Phụ Kiện Trọng Tâm</h2>
+                <p class="section-subtitle">Ba món đồ thiết yếu giúp tối ưu góc làm việc tại phòng trọ và giảng đường.</p>
+            </div>
         </div>
 
-        <div class="categories-grid">
+        <div class="categories-preview-grid">
             {% for cat in categories %}
-            <div class="card category-card" id="cat-{{ cat.id }}">
-                <div class="card-icon-wrapper">
-                    <span class="card-icon">{{ cat.icon }}</span>
+            <a href="{% url 'catalog:category_detail' slug=cat.slug %}" class="category-card" id="cat-card-{{ cat.slug }}">
+                <div class="category-icon">
+                    {% if cat.slug == 'chuot-may-tinh' %}🖱️
+                    {% elif cat.slug == 'ban-phim' %}⌨️
+                    {% elif cat.slug == 'gia-do-laptop' %}💻
+                    {% else %}⚡{% endif %}
                 </div>
-                <h3 class="card-title">{{ cat.name }}</h3>
-                <p class="card-description">{{ cat.description }}</p>
-                <div class="card-footer">
-                    <span class="tag tag-outline">Sắp ra mắt so sánh</span>
-                </div>
+                <h3 class="category-title">{{ cat.name }}</h3>
+                <p class="category-desc">{{ cat.description|truncatewords:20 }}</p>
+                <span class="btn btn-outline btn-sm">Xem danh mục &rarr;</span>
+            </a>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon">📦</div>
+                <h3 class="empty-title">Đang cập nhật danh mục</h3>
+                <p class="empty-desc">Hệ thống đang chuẩn bị danh mục phụ kiện đầu tiên cho sinh viên.</p>
             </div>
             {% endfor %}
         </div>
     </div>
 </section>
 
-<!-- Thông số hệ thống & Quy ước dự án -->
-<section class="section tech-section" id="tech-specs">
+<!-- Sản phẩm nổi bật -->
+<section class="section" style="background-color: var(--bg-surface); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
     <div class="container">
         <div class="section-header">
-            <span class="section-tag">Công nghệ & Cấu trúc</span>
-            <h2 class="section-title">Phân Chia Module Theo Trách Nhiệm</h2>
-            <p class="section-subtitle">Kiến trúc module hóa rõ ràng đảm bảo khả năng bảo trì và mở rộng an toàn.</p>
-        </div>
-
-        <div class="modules-grid">
-            <div class="module-card">
-                <div class="module-code">apps.core</div>
-                <h4>Hệ thống Cốt lõi</h4>
-                <p>Quản lý trang chủ, layouts, utils, abstract models, health check.</p>
-                <span class="badge badge-success">Hoạt động</span>
-            </div>
-
-            <div class="module-card">
-                <div class="module-code">apps.catalog</div>
-                <h4>Danh mục & Sản phẩm</h4>
-                <p>Quản lý chuột, bàn phím, giá đỡ laptop, thông số kỹ thuật.</p>
-                <span class="badge badge-neutral">Sẵn sàng (Phase 2)</span>
-            </div>
-
-            <div class="module-card">
-                <div class="module-code">apps.content</div>
-                <h4>Nội dung & Đánh giá</h4>
-                <p>Bài viết đánh giá chuyên sâu, cẩm nang chọn mua, so sánh tiêu chí.</p>
-                <span class="badge badge-neutral">Sẵn sàng (Phase 3)</span>
-            </div>
-
-            <div class="module-card">
-                <div class="module-code">apps.affiliates</div>
-                <h4>Tiếp thị liên kết</h4>
-                <p>Quản lý đối tác bán hàng, tracking liên kết tiếp thị, chuyển hướng.</p>
-                <span class="badge badge-neutral">Sẵn sàng (Phase 4)</span>
-            </div>
-
-            <div class="module-card">
-                <div class="module-code">apps.analytics</div>
-                <h4>Phân tích & Thống kê</h4>
-                <p>Ghi nhận lượt click, số liệu tương tác phục vụ tối ưu hóa.</p>
-                <span class="badge badge-neutral">Sẵn sàng (Phase 5)</span>
+            <div>
+                <h2 class="section-title">Sản Phẩm Đang Được Quan Tâm</h2>
+                <p class="section-subtitle">Các mẫu chuột, bàn phím và giá đỡ được nhiều bạn sinh viên tìm kiếm.</p>
             </div>
         </div>
+
+        {% if featured_products %}
+        <div class="products-grid">
+            {% for prod in featured_products %}
+            <article class="product-card" id="product-{{ prod.slug }}">
+                <a href="{% url 'catalog:product_detail' slug=prod.slug %}" class="product-thumb-wrapper" tabindex="-1">
+                    {% with prod.images.first as img %}
+                        {% if img and img.image %}
+                            <img src="{{ img.image.url }}" alt="{{ img.alt_text|default:prod.name }}" class="product-thumb" loading="lazy">
+                        {% else %}
+                            <div class="product-thumb-placeholder">
+                                {% if prod.category.slug == 'chuot-may-tinh' %}🖱️
+                                {% elif prod.category.slug == 'ban-phim' %}⌨️
+                                {% elif prod.category.slug == 'gia-do-laptop' %}💻
+                                {% else %}⚡{% endif %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </a>
+                <div class="product-body">
+                    <div class="product-meta-header">
+                        <span class="product-brand">{{ prod.brand }}</span>
+                        <span class="badge badge-neutral">{{ prod.category.name }}</span>
+                    </div>
+                    <h3 class="product-name">
+                        <a href="{% url 'catalog:product_detail' slug=prod.slug %}">{{ prod.name }}</a>
+                    </h3>
+                    <p class="product-snippet">{{ prod.short_description|default:"Thông số kỹ thuật đầy đủ và so sánh nơi bán." }}</p>
+                    <div class="product-footer">
+                        <div class="product-price-box">
+                            <span class="price-label">Giá tham khảo:</span>
+                            {% if prod.min_price %}
+                                <span class="product-price">từ {{ prod.min_price|floatformat:0 }} đ</span>
+                            {% else %}
+                                <span class="price-none">Chưa có giá</span>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'catalog:product_detail' slug=prod.slug %}" class="btn btn-secondary btn-sm">Chi tiết</a>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <h3 class="empty-title">Chưa có sản phẩm xuất bản</h3>
+            <p class="empty-desc">Các sản phẩm đang trong giai đoạn biên tập thông số và sẽ sớm được công bố.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Bài viết mới nhất -->
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Bài Viết & Đánh Giá Mới Nhất</h2>
+                <p class="section-subtitle">Phân tích thực tế, cẩm nang chọn mua và kinh nghiệm tối ưu góc học tập.</p>
+            </div>
+            <a href="{% url 'content:article_list' %}" class="btn btn-outline btn-sm">Xem tất cả bài viết &rarr;</a>
+        </div>
+
+        {% if latest_articles %}
+        <div class="articles-grid">
+            {% for art in latest_articles %}
+            <article class="article-card" id="art-{{ art.slug }}">
+                <a href="{% url 'content:article_detail' slug=art.slug %}" class="article-thumb-wrapper" tabindex="-1">
+                    {% if art.thumbnail %}
+                        <img src="{{ art.thumbnail.url }}" alt="{{ art.title }}" class="article-thumb" loading="lazy">
+                    {% else %}
+                        <div class="product-thumb-placeholder">📝</div>
+                    {% endif %}
+                    <div class="article-badge-overlay">
+                        <span class="badge badge-primary">{{ art.get_article_type_display }}</span>
+                    </div>
+                </a>
+                <div class="article-body">
+                    <div class="article-meta">
+                        <span>📅 {{ art.published_at|date:"d/m/Y" }}</span>
+                        <span>✍️ {{ art.author.get_full_name|default:art.author.username }}</span>
+                    </div>
+                    <h3 class="article-title">
+                        <a href="{% url 'content:article_detail' slug=art.slug %}">{{ art.title }}</a>
+                    </h3>
+                    <p class="article-summary">{{ art.summary|truncatewords:24 }}</p>
+                    <div class="article-footer">
+                        {% if art.is_hands_on_experience %}
+                            <span class="badge badge-success">✓ Đã test thực tế</span>
+                        {% else %}
+                            <span class="badge badge-neutral">Tổng hợp thông tin</span>
+                        {% endif %}
+                        <a href="{% url 'content:article_detail' slug=art.slug %}" style="font-weight: 600; color: var(--primary);">Đọc tiếp &rarr;</a>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📰</div>
+            <h3 class="empty-title">Chưa có bài viết xuất bản</h3>
+            <p class="empty-desc">Các bài viết đánh giá đang được ban biên tập hoàn thiện nội dung.</p>
+        </div>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

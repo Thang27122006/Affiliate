@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container section" style="max-width: 860px; padding-top: 24px; padding-bottom: 60px;">
+    <!-- Breadcrumb & Header -->
+    <div style="margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <a href="{% url 'analytics:dashboard' %}" style="font-size: 0.85rem; color: var(--primary); font-weight: 600;">&larr; Báo Cáo Hiệu Quả</a>
+            <span style="color: var(--text-muted);">/</span>
+            <span class="badge badge-primary">🔒 Staff Only</span>
+        </div>
+        <h1 class="page-title" style="font-size: 1.8rem; margin: 0 0 6px 0;">Nhập Báo Cáo Đối Soát Hoa Hồng (CSV)</h1>
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;">
+            Chức năng nhập file CSV định dạng nội bộ để đối soát hoa hồng thực tế từ các chương trình tiếp thị liên kết (Shopee, Tiki, Lazada...).
+        </p>
+    </div>
+
+    <!-- Kết quả nhập file nếu có -->
+    {% if import_result %}
+        {% if import_result.success %}
+        <div class="card" style="padding: 20px; background: #ecfdf5; border: 1px solid #a7f3d0; margin-bottom: 24px; border-radius: var(--radius-md);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <span style="font-size: 1.4rem;">✅</span>
+                <h3 style="font-size: 1.1rem; color: #065f46; margin: 0;">Nhập Dữ Liệu Đối Soát Thành Công!</h3>
+            </div>
+            <p style="font-size: 0.9rem; color: #047857; margin: 0 0 12px 0;">
+                Toàn bộ dữ liệu trong file đã được kiểm tra tính hợp lệ và cập nhật vào cơ sở dữ liệu qua giao dịch nguyên tử (transaction).
+            </p>
+            <ul style="font-size: 0.88rem; color: #065f46; margin: 0; padding-left: 20px;">
+                <li>Tổng số dòng dữ liệu xử lý: <strong>{{ import_result.total_rows }}</strong></li>
+                <li>Giao dịch thêm mới: <strong>{{ import_result.created_count }}</strong> bản ghi</li>
+                <li>Giao dịch cập nhật trạng thái / hoa hồng: <strong>{{ import_result.updated_count }}</strong> bản ghi (không nhân đôi số liệu)</li>
+            </ul>
+            <div style="margin-top: 16px;">
+                <a href="{% url 'analytics:dashboard' %}" class="btn btn-primary btn-sm">Xem ngay trên Dashboard &rarr;</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="card" style="padding: 20px; background: #fef2f2; border: 1px solid #fecaca; margin-bottom: 24px; border-radius: var(--radius-md);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <span style="font-size: 1.4rem;">⚠️</span>
+                <h3 style="font-size: 1.1rem; color: #991b1b; margin: 0;">Không Thể Nhập Dữ Liệu! Phát Hiện Lỗi Cấu Trúc / Định Dạng</h3>
+            </div>
+            <p style="font-size: 0.88rem; color: #b91c1c; margin: 0 0 12px 0;">
+                Hệ thống tuân thủ nguyên tắc an toàn dữ liệu: Không lưu dở dang khi có lỗi để tránh làm sai lệch số liệu kế toán. Vui lòng kiểm tra và sửa lại các dòng sau:
+            </p>
+            <div style="max-height: 240px; overflow-y: auto; background: white; padding: 12px; border-radius: var(--radius-sm); border: 1px solid #fca5a5;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+                    <thead>
+                        <tr style="text-align: left; border-bottom: 1px solid #fecaca; color: #991b1b;">
+                            <th style="padding: 6px 8px; width: 80px;">Dòng</th>
+                            <th style="padding: 6px 8px;">Nguyên nhân lỗi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for err in import_result.errors %}
+                        <tr style="border-bottom: 1px solid #fee2e2;">
+                            <td style="padding: 6px 8px; font-weight: 700; color: #b91c1c;">Dòng {{ err.row }}</td>
+                            <td style="padding: 6px 8px; color: #7f1d1d;">{{ err.reason }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+
+    <!-- Form tải lên file CSV -->
+    <div class="card" style="padding: 24px; background: white; margin-bottom: 28px;">
+        <h2 style="font-size: 1.2rem; margin-top: 0; margin-bottom: 16px;">Tải Lên Tập Tin Báo Cáo CSV</h2>
+        
+        <form method="post" enctype="multipart/form-data" action="{% url 'analytics:reconciliation_import' %}">
+            {% csrf_token %}
+            <div style="margin-bottom: 20px;">
+                <label for="csv_file" style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 8px;">
+                    Chọn tập tin CSV từ máy tính của bạn:
+                </label>
+                <input type="file" id="csv_file" name="csv_file" accept=".csv" required style="display: block; width: 100%; padding: 10px; border: 1px dashed var(--border-color); border-radius: var(--radius-sm); background: var(--bg-surface);">
+                <small style="color: var(--text-muted); display: block; margin-top: 6px;">
+                    Chấp nhận file định dạng .csv (mã hóa UTF-8 hoặc UTF-8 with BOM).
+                </small>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+                <button type="submit" class="btn btn-primary">
+                    📤 Tiến hành kiểm tra & Nhập dữ liệu
+                </button>
+                <a href="{% url 'analytics:download_sample_csv' %}" class="btn btn-outline" style="font-size: 0.88rem;">
+                    📄 Tải file CSV mẫu (sample_reconciliation.csv)
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Hướng dẫn định dạng & Quy tắc đối soát -->
+    <div class="card" style="padding: 24px; background: white;">
+        <h3 style="font-size: 1.1rem; margin-top: 0; margin-bottom: 12px;">📖 Quy Định Định Dạng Các Cột Trong CSV</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">
+            File CSV phải có dòng tiêu đề (header) chứa chính xác các tên cột sau (không phân biệt hoa thường):
+        </p>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+                <thead>
+                    <tr style="background: var(--bg-surface); text-align: left; border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 8px 10px;">Tên cột</th>
+                        <th style="padding: 8px 10px;">Bắt buộc</th>
+                        <th style="padding: 8px 10px;">Định dạng & Ví dụ</th>
+                        <th style="padding: 8px 10px;">Mô tả nghiệp vụ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 8px 10px;"><code>program</code></td>
+                        <td style="padding: 8px 10px; color: #b91c1c; font-weight: 600;">Có</td>
+                        <td style="padding: 8px 10px;">Shopee Vietnam, Tiki, Lazada</td>
+                        <td style="padding: 8px 10px;">Tên đối tác hoặc mạng tiếp thị liên kết.</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 8px 10px;"><code>transaction_id</code></td>
+                        <td style="padding: 8px 10px; color: #b91c1c; font-weight: 600;">Có</td>
+                        <td style="padding: 8px 10px;">SPX20261025001, 261025XYZ</td>
+                        <td style="padding: 8px 10px;">Mã đơn hàng / Mã giao dịch ngoài hệ thống.</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 8px 10px;"><code>item_id</code></td>
+                        <td style="padding: 8px 10px; color: var(--text-muted);">Không</td>
+                        <td style="padding: 8px 10px;">ITEM01, LINE_A (hoặc để trống)</td>
+                        <td style="padding: 8px 10px;">Mã dòng sản phẩm nếu đơn có nhiều mặt hàng; tránh gộp nhầm.</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 8px 10px;"><code>transaction_time</code></td>
+                        <td style="padding: 8px 10px; color: #b91c1c; font-weight: 600;">Có</td>
+                        <td style="padding: 8px 10px;">2026-10-25 14:30:00</td>
+                        <td style="padding: 8px 10px;">Thời gian phát sinh giao dịch (chuẩn ISO / YYYY-MM-DD HH:MM:SS).</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 8px 10px;"><code>status</code></td>
+                        <td style="padding: 8px 10px; color: #b91c1c; font-weight: 600;">Có</td>
+                        <td style="padding: 8px 10px;">approved, pending, rejected</td>
+                        <td style="padding: 8px 10px;">Trạng thái hoa hồng do sàn phê duyệt.</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 8px 10px;"><code>commission</code></td>
+                        <td style="padding: 8px 10px; color: #b91c1c; font-weight: 600;">Có</td>
+                        <td style="padding: 8px 10px;">15000, 2.50</td>
+                        <td style="padding: 8px 10px;">Số tiền hoa hồng nhận được (số >= 0).</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 8px 10px;"><code>currency</code></td>
+                        <td style="padding: 8px 10px; color: #b91c1c; font-weight: 600;">Có</td>
+                        <td style="padding: 8px 10px;">VND, USD</td>
+                        <td style="padding: 8px 10px;">Đơn vị tiền tệ (hệ thống không cộng gộp các tiền tệ khác nhau).</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 8px 10px;"><code>tracking_code</code></td>
+                        <td style="padding: 8px 10px; color: var(--text-muted);">Không</td>
+                        <td style="padding: 8px 10px;">prod-chuot-m350, art-review-k2</td>
+                        <td style="padding: 8px 10px;">Mã tracking/sub_id hỗ trợ đối chiếu với Sản phẩm hoặc Bài viết cụ thể.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 18px; padding: 12px 14px; background: var(--bg-surface); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+            🛡️ <strong>Chính Sách Bảo Mật:</strong> File đối soát tuyệt đối không yêu cầu hoặc lưu trữ tên, số điện thoại, email hay địa chỉ của khách hàng mua sản phẩm trên sàn đối tác.
+        </div>
+    </div>
+</div>
+{% endblock %}
