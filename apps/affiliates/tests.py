@@ -316,8 +316,12 @@ class AffiliateLinkSafetyAndRedirectTestCase(TestCase):
         """Nếu việc ghi nhận ClickEvent vào database gặp lỗi, redirect vẫn hoạt động bình thường"""
         url = reverse("affiliates:redirect_to_offer", kwargs={"offer_id": self.offer.id})
 
-        with patch("apps.analytics.models.ClickEvent.objects.create", side_effect=Exception("Database error")):
+        with (
+            patch("apps.analytics.models.ClickEvent.objects.create", side_effect=Exception("Database error")),
+            patch("apps.affiliates.views.logger.error") as mock_logger,
+        ):
             response = self.client.get(url)
+            mock_logger.assert_called_once()
 
         # Người đọc vẫn được chuyển hướng an toàn, không bị văng lỗi 500
         self.assertEqual(response.status_code, 302)
