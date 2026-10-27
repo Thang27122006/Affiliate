@@ -40,6 +40,11 @@ class Category(TimeStampedModel):
         default=StatusChoices.DRAFT,
         verbose_name="Trạng thái",
     )
+    display_order = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Thứ tự hiển thị",
+        help_text="Số nhỏ hơn sẽ hiển thị trước trên thanh menu và danh sách.",
+    )
     is_demo = models.BooleanField(
         default=False,
         verbose_name="Dữ liệu mẫu (Demo)",
@@ -51,7 +56,7 @@ class Category(TimeStampedModel):
     class Meta:
         verbose_name = "Danh mục"
         verbose_name_plural = "Danh mục sản phẩm"
-        ordering = ["name"]
+        ordering = ["display_order", "name"]
 
     def __str__(self):
         return self.name

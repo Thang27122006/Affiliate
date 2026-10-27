@@ -166,6 +166,90 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--primary);
 }
 
+/* Navigation Dropdown */
+.nav-dropdown {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.nav-dropdown-btn {
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    outline: none;
+}
+
+.dropdown-chevron {
+    font-size: 0.72rem;
+    transition: transform 0.2s ease;
+    display: inline-block;
+    color: var(--text-muted);
+}
+
+.nav-dropdown.is-open .dropdown-chevron,
+.nav-dropdown-btn[aria-expanded="true"] .dropdown-chevron {
+    transform: rotate(180deg);
+    color: var(--primary);
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    min-width: 220px;
+    max-height: 360px;
+    overflow-y: auto;
+    z-index: 250;
+    padding: 6px;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-dropdown.is-open .dropdown-menu {
+    display: flex;
+}
+
+.dropdown-item {
+    padding: 8px 12px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+    background-color: var(--bg-surface-alt);
+    color: var(--primary);
+    outline: none;
+}
+
+.dropdown-item.active {
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 4px 2px;
+}
+
 .header-search {
     flex: 1;
     max-width: 280px;
@@ -1137,5 +1221,37 @@ h1, h2, h3, h4, h5, h6 {
     .toolbar {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    /* Mobile Accordion Dropdown */
+    .nav-dropdown {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .nav-dropdown-btn {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+    }
+
+    .dropdown-menu {
+        position: static;
+        box-shadow: none;
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-surface-alt);
+        margin-top: 8px;
+        width: 100%;
+        border-radius: var(--radius-md);
+        padding: 6px;
+    }
+
+    .dropdown-item {
+        padding: 10px 12px;
+        white-space: normal;
     }
 }

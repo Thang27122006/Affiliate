@@ -4,6 +4,56 @@ from django.db.models import Min, Q
 from .models import Category, Product
 
 
+def product_list_view(request):
+    """
+    Trang tất cả sản phẩm:
+    Hiển thị danh sách toàn bộ sản phẩm đã xuất bản, hỗ trợ lọc theo danh mục,
+    thương hiệu và tùy chọn sắp xếp.
+    """
+    products_qs = (
+        Product.objects.published()
+        .select_related("category")
+        .prefetch_related("images", "offers")
+        .annotate(min_price=Min("offers__price", filter=Q(offers__is_active=True)))
+    )
+
+    # Lọc theo danh mục nếu có
+    selected_category = request.GET.get("category", "").strip()
+    if selected_category:
+        products_qs = products_qs.filter(category__slug=selected_category)
+
+    # Lọc theo thương hiệu nếu có
+    selected_brand = request.GET.get("brand", "").strip()
+    if selected_brand:
+        products_qs = products_qs.filter(brand__iexact=selected_brand)
+
+    # Sắp xếp
+    sort = request.GET.get("sort", "newest")
+    if sort == "name_asc":
+        products_qs = products_qs.order_by("name")
+    elif sort == "name_desc":
+        products_qs = products_qs.order_by("-name")
+    elif sort == "price_asc":
+        products_qs = products_qs.order_by("min_price")
+    else:  # newest
+        products_qs = products_qs.order_by("-created_at")
+
+    # Phân trang
+    paginator = Paginator(products_qs, 12)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "title": "Tất cả sản phẩm - Góc Phụ Kiện",
+        "page_obj": page_obj,
+        "selected_category": selected_category,
+        "selected_brand": selected_brand,
+        "current_sort": sort,
+        "total_count": paginator.count,
+    }
+    return render(request, "catalog/product_list.html", context)
+
+
 def category_detail_view(request, slug):
     """
     Trang danh mục sản phẩm:

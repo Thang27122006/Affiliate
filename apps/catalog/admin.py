@@ -41,7 +41,8 @@ class OfferInline(admin.TabularInline):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug", "status_badge", "is_demo", "product_count", "created_at")
+    list_display = ("name", "display_order", "slug", "status_badge", "is_demo", "product_count", "created_at")
+    list_editable = ("display_order",)
     list_filter = ("status", "is_demo", "created_at")
     search_fields = ("name", "slug", "description")
     prepopulated_fields = {"slug": ("name",)}

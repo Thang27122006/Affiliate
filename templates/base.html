@@ -34,14 +34,44 @@
                 </form>
             </div>
 
-            <!-- Navigation Links -->
+            <!-- Navigation Links: Trang chủ | Bài viết | Phương pháp | Sản phẩm ▾ -->
             <nav class="main-nav" id="main-nav" aria-label="Menu chính">
-                <a href="{% url 'core:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Trang chủ</a>
-                <a href="{% url 'catalog:category_detail' slug='chuot-may-tinh' %}" class="nav-link">Chuột</a>
-                <a href="{% url 'catalog:category_detail' slug='ban-phim' %}" class="nav-link">Bàn phím</a>
-                <a href="{% url 'catalog:category_detail' slug='gia-do-laptop' %}" class="nav-link">Giá đỡ</a>
+                <a href="{% url 'core:home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">Trang chủ</a>
                 <a href="{% url 'content:article_list' %}" class="nav-link {% if request.resolver_match.app_name == 'content' %}active{% endif %}">Bài viết</a>
                 <a href="{% url 'core:about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">Phương pháp</a>
+
+                <!-- Dropdown Sản phẩm (Mở bằng nút nhấn, bàn phím Tab/Enter/Space/Escape) -->
+                <div class="nav-dropdown" id="nav-dropdown-products">
+                    <button type="button" 
+                            class="nav-link nav-dropdown-btn {% if request.resolver_match.app_name == 'catalog' %}active{% endif %}" 
+                            id="products-dropdown-btn" 
+                            aria-expanded="false" 
+                            aria-haspopup="true" 
+                            aria-controls="products-dropdown-menu">
+                        <span>Sản phẩm</span>
+                        <span class="dropdown-chevron" aria-hidden="true">▾</span>
+                    </button>
+
+                    <div class="dropdown-menu" id="products-dropdown-menu" role="menu" aria-labelledby="products-dropdown-btn">
+                        <a href="{% url 'catalog:product_list' %}" 
+                           class="dropdown-item {% if request.resolver_match.url_name == 'product_list' and not request.GET.category %}active{% endif %}" 
+                           role="menuitem">
+                            📦 <strong>Tất cả sản phẩm</strong>
+                        </a>
+                        <div class="dropdown-divider" role="separator"></div>
+                        {% for cat in nav_categories %}
+                            <a href="{% url 'catalog:category_detail' slug=cat.slug %}" 
+                               class="dropdown-item {% if category.slug == cat.slug or product.category.slug == cat.slug or request.GET.category == cat.slug %}active{% endif %}" 
+                               role="menuitem">
+                                {% if cat.slug == 'ban-phim' %}⌨️ 
+                                {% elif cat.slug == 'chuot-may-tinh' %}🖱️ 
+                                {% elif cat.slug == 'gia-do-laptop' %}💻 
+                                {% else %}⚡ {% endif %}
+                                {{ cat.name }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
             </nav>
 
             <!-- Mobile Menu Toggle Button -->

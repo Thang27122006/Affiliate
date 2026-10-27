@@ -67,21 +67,24 @@ class Command(BaseCommand):
             author.save()
             self.stdout.write(f"Đã tạo tài khoản biên tập demo: {author.username}")
 
-        # 2. Danh mục ban đầu (Chuột, Bàn phím, Giá đỡ laptop)
+        # 2. Danh mục ban đầu (Bàn phím, Chuột, Giá đỡ)
         cat_data = [
-            {
-                "name": "Chuột máy tính",
-                "slug": "chuot-may-tinh",
-                "description": "Chuột văn phòng silent, chuột công thái học cho học tập và làm việc.",
-            },
             {
                 "name": "Bàn phím",
                 "slug": "ban-phim",
+                "display_order": 1,
                 "description": "Bàn phím cơ giá sinh viên, bàn phím Bluetooth mỏng nhẹ di động.",
+            },
+            {
+                "name": "Chuột máy tính",
+                "slug": "chuot-may-tinh",
+                "display_order": 2,
+                "description": "Chuột văn phòng silent, chuột công thái học cho học tập và làm việc.",
             },
             {
                 "name": "Giá đỡ laptop",
                 "slug": "gia-do-laptop",
+                "display_order": 3,
                 "description": "Giá đỡ nhôm tản nhiệt, nâng góc nhìn bảo vệ cổ vai gáy khi ngồi học.",
             },
         ]
@@ -93,15 +96,17 @@ class Command(BaseCommand):
                 defaults={
                     "name": c["name"],
                     "description": c["description"],
+                    "display_order": c["display_order"],
                     "status": target_status,
                     "is_demo": True,
                 },
             )
-            if not created and options.get("publish"):
+            cat_obj.display_order = c["display_order"]
+            if options.get("publish"):
                 cat_obj.status = target_status
-                cat_obj.save()
+            cat_obj.save()
             categories[c["slug"]] = cat_obj
-            self.stdout.write(f" - Danh mục: {cat_obj.name}")
+            self.stdout.write(f" - Danh mục: {cat_obj.name} (Thứ tự: {cat_obj.display_order})")
 
         # 3. Định nghĩa thông số (SpecificationDefinition)
         specs_data = [
