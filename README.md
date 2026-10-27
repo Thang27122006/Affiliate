@@ -256,18 +256,80 @@ Hệ thống hỗ trợ linh hoạt 2 chế độ liên kết cho từng nơi b�
 
 ---
 
-## 6. Kiểm Thử Hệ Thống (Unit Tests)
-Dự án bao gồm **65 bài kiểm thử tự động** bao phủ toàn bộ các luồng nghiệp vụ:
+## 6. Báo Cáo Nội Bộ & Đối Soát Tiếp Thị Liên Kết (Admin Analytics & Reconciliation)
+
+### 1. Phân Biệt Nguồn Số Liệu & Giới Hạn Nghiệp Vụ
+Hệ thống phân định rạch ròi 2 nhóm số liệu và công khai giới hạn kỹ thuật:
+- **Số liệu nội bộ do website đo (Internal Tracking):**
+  - Gồm: Lượt xem trang sản phẩm / bài viết (`PageView`) và Lượt bấm đối tác (`ClickEvent`).
+  - *Mục đích:* Đo lường mức độ quan tâm của độc giả đối với nội dung và phụ kiện công nghệ.
+  - *Giới hạn:* Đây là số lượng sự kiện kỹ thuật (event count), **không phản ánh số người dùng duy nhất (Unique Visitors)**. Dữ liệu có thể bị sai lệch bởi bot crawl của công cụ tìm kiếm hoặc tiện ích chặn quảng cáo/tracking của người đọc.
+  - *Tỷ lệ CTR theo sự kiện (Event-based CTR):* Tính bằng `(Clicks / Views) * 100` trong cùng một phạm vi lọc (cùng khoảng ngày, cùng sản phẩm). Ghi rõ trên giao diện đây là tỷ lệ sự kiện, không chia cho 0 khi lượt xem bằng 0.
+- **Số liệu đối soát do sàn đối tác ghi nhận (Partner Reconciliation):**
+  - Gồm: Mã đơn hàng (`transaction_id`), mã dòng sản phẩm (`item_id`), thời gian đơn, trạng thái và hoa hồng thực tế.
+  - *Mục đích:* Đối soát doanh thu thực tế được ghi nhận bởi các sàn (Shopee, Tiki, Lazada, AccessTrade...).
+  - *Giới hạn:* Website chưa tích hợp API tự động khi chưa có thông tin xác thực chính thức từ sàn; số liệu được nhập định kỳ qua file CSV nội bộ chuẩn hóa.
+  - *Nguyên tắc đối chiếu:* Chỉ gắn kết giao dịch với sản phẩm hoặc bài viết khi có mã tracking (`tracking_code` / `sub_id`) rõ ràng; **tuyệt đối không phỏng đoán theo thời gian phát sinh gần nhau**. Nếu thiếu tracking code, hệ thống không tính tỷ lệ chuyển đổi suy diễn.
+
+### 2. Quy Định Định Dạng CSV Đối Soát & Tính Toàn Vẹn
+Tập tin CSV nhập vào hệ thống sử dụng định dạng chuẩn (UTF-8 / UTF-8-sig) với các cột bắt buộc:
+`program,transaction_id,item_id,transaction_time,status,commission,currency,tracking_code`
+- **Khóa định danh duy nhất (Composite Key):** `(program_name, external_transaction_id, external_order_item_id)`:
+  - Cho phép phân tách nhiều sản phẩm khác nhau trong cùng một mã đơn hàng (`transaction_id`) mà không bị gộp đè.
+  - Đảm bảo tính **Idempotent**: Nhập lại cùng một file hoặc file cập nhật mới sẽ cập nhật trạng thái (ví dụ từ `pending` sang `approved`) hoặc bỏ qua nếu không đổi, **tuyệt đối không nhân đôi số liệu doanh thu**.
+- **Giao dịch nguyên tử (Transaction Atomic) & Báo cáo dòng lỗi:**
+  - Toàn bộ file được kiểm duyệt trước khi lưu.
+  - Nếu có dòng sai định dạng (thiếu cột bắt buộc, ngày sai cú pháp, hoa hồng âm, trạng thái lạ), hệ thống sẽ **rollback toàn bộ và hiển thị bảng chi tiết các dòng bị lỗi kèm lý do cụ thể**.
+- **Tập tin CSV mẫu:** Đặt tại [docs/sample_reconciliation.csv](file:///home/tmthang/Affiliate/docs/sample_reconciliation.csv) dùng dữ liệu minh họa (`DEMO_SPX_001`, `SAMPLE_ITEM`), không tự động import vào database.
+- **Bảo mật quyền riêng tư:** File đối soát tuyệt đối không chứa hoặc yêu cầu tên, số điện thoại, địa chỉ hay email của người mua hàng.
+
+### 3. Hiển Thị Báo Cáo Dashboard (Staff Only)
+- Đường dẫn: `/analytics/dashboard/` và `/analytics/reconciliation/import/`.
+- **Phân quyền chặt chẽ:** Chỉ tài khoản có cờ `is_staff=True` mới có quyền truy cập; khách vãng lai và người dùng thường bị chuyển hướng đến trang đăng nhập admin (`HTTP 302`), không làm lộ dữ liệu kinh doanh ra trang công khai.
+- **Xử lý Múi giờ nhất quán:** Toàn bộ bộ lọc khoảng ngày (`start_date`, `end_date`) và hiển thị thời gian đều sử dụng chuẩn múi giờ Việt Nam (`Asia/Ho_Chi_Minh`).
+- **Phân tách hoa hồng theo trạng thái:**
+  - Hoa hồng đã duyệt (`approved`)
+  - Hoa hồng chờ duyệt (`pending`)
+  - Hoa hồng bị từ chối (`rejected`)
+- **Tách biệt đơn vị tiền tệ:** Hệ thống gom nhóm và hiển thị riêng biệt theo từng loại tiền tệ (`VND`, `USD`...), **tuyệt đối không cộng gộp các loại tiền tệ khác nhau thành một tổng**.
+
+### 4. Chính Sách Lưu Giữ & Command Dọn Dẹp Dữ Liệu Cũ
+- Dữ liệu sự kiện kỹ thuật (`PageView`, `ClickEvent`) phát sinh liên tục được đề xuất lưu giữ chi tiết trong 90 ngày.
+- **Django Management Command:**
+  ```bash
+  # Chế độ kiểm tra thử nghiệm (không xóa dữ liệu trong database):
+  python manage.py cleanup_analytics_events --days=90 --dry-run
+
+  # Chế độ thực thi dọn dẹp thật:
+  python manage.py cleanup_analytics_events --days=90
+  ```
+- **Nguyên tắc an toàn:**
+  - Command chỉ xóa các bản ghi sự kiện `PageView` và `ClickEvent` cũ hơn N ngày.
+  - Dữ liệu đối soát tài chính `AffiliateConversion` **được bảo toàn nguyên vẹn** phục vụ đối chiếu kế toán và thuế.
+  - Command tuyệt đối **không tự động chạy khi triển khai hoặc migrate**.
+
+---
+
+## 7. Kiểm Thử Hệ Thống (Unit Tests)
+Dự án bao gồm **79 bài kiểm thử tự động** bao phủ toàn bộ các luồng nghiệp vụ:
 ```bash
 python manage.py test
 ```
 
 **Các nhóm kiểm thử chính:**
-1. **Affiliate Link Safety & Redirect (18 tests):** Bắt buộc HTTPS, giữ nguyên tham số tracking, chặn HTTP/javascript/data/file, chặn URL chứa credentials, chặn hostname giả mạo mạo danh subdomain, kiểm tra 2 chế độ direct/redirect và override, redirect 302 thành công, 404 khi offer/merchant inactive hoặc product/category draft, chống Open Redirect, tính chịu lỗi khi logging thất bại.
-2. **Analytics Click Tracking & Privacy (6 tests):** Ghi nhận direct click thành công, xác minh model không lưu IP thô/fingerprint/PII, debounce throttle 3 giây chống spam lặp, từ chối input lỗi/inactive, xác minh thẻ HTML có href thật hoạt động ngay cả khi JS tắt hoặc tracking lỗi.
-3. **Catalog Constraints & Data Integrity:** Ràng buộc giá Decimal > 0, chống gán spec sai danh mục, chống trùng spec trên cùng 1 sản phẩm, tự động sinh slug duy nhất chống xung đột.
-4. **Bộ lọc & Sắp xếp:** Kiểm thử lọc kết hợp (danh mục + thương hiệu + khoảng giá), xử lý sản phẩm chưa có giá (không coi là 0đ, lọc riêng, sắp xếp nulls_last).
-5. **So sánh sản phẩm:** So sánh hợp lệ 2-3 sản phẩm, từ chối thêm trùng sản phẩm, từ chối vượt quá 3 sản phẩm, từ chối sản phẩm khác danh mục, loại bỏ sản phẩm nháp, hiển thị "Chưa có thông tin" khi thiếu spec, đúng thứ tự định nghĩa danh mục.
-6. **Tìm kiếm:** Tìm kiếm hoa/thường, tìm kiếm tiếng Việt không dấu (`unaccent`), xử lý chuỗi rỗng/khoảng trắng, tự động rút gọn từ khóa quá dài > 120 ký tự, loại bỏ bài viết nháp/tương lai, phân tách sản phẩm và bài viết.
-7. **Giao diện & Điều hướng:** Kiểm tra cấu trúc menu 4 mục (`Trang chủ | Bài viết | Phương pháp | Sản phẩm ▾`), kiểm tra active state, responsive layout.
+1. **Analytics Dashboard, Permissions & Reconciliation (20 tests):**
+   - Kiểm thử bảo mật quyền truy cập (Staff only, từ chối khách vãng lai & user thường).
+   - Kiểm thử lọc khoảng ngày theo múi giờ `Asia/Ho_Chi_Minh`, tự động đảo ngày nếu nhập ngược.
+   - Kiểm thử tính toán CTR sự kiện và chống lỗi chia cho 0 khi chưa có lượt xem.
+   - Kiểm thử ghi nhận `PageView` cho sản phẩm và bài viết, kiểm tra tính chịu lỗi (resilience) khi database gặp sự cố.
+   - Kiểm thử import CSV đối soát: Tạo mới bản ghi, import lặp lại không nhân đôi (idempotency), cập nhật trạng thái đơn (pending -> approved), phân biệt nhiều item trong cùng 1 đơn, báo cáo dòng lỗi và transaction rollback.
+   - Kiểm thử tách bạch tiền tệ (VND, USD), đối chiếu sản phẩm/bài viết qua tracking code, xác minh không lưu thông tin PII.
+   - Kiểm thử management command `cleanup_analytics_events` (chế độ `--dry-run` không xóa, chế độ thực thi xóa đúng hạn và bảo toàn dữ liệu đối soát).
+2. **Affiliate Link Safety & Redirect (18 tests):** Bắt buộc HTTPS, giữ nguyên tham số tracking, chặn HTTP/javascript/data/file, chặn URL chứa credentials, chặn hostname giả mạo mạo danh subdomain, kiểm tra 2 chế độ direct/redirect và override, redirect 302 thành công, 404 khi offer/merchant inactive hoặc product/category draft, chống Open Redirect, tính chịu lỗi khi logging thất bại.
+3. **Catalog Constraints & Data Integrity (14 tests):** Ràng buộc giá Decimal > 0, chống gán spec sai danh mục, chống trùng spec trên cùng 1 sản phẩm, tự động sinh slug duy nhất chống xung đột.
+4. **Bộ lọc & Sắp xếp (8 tests):** Kiểm thử lọc kết hợp (danh mục + thương hiệu + khoảng giá), xử lý sản phẩm chưa có giá (không coi là 0đ, lọc riêng, sắp xếp nulls_last).
+5. **So sánh sản phẩm (8 tests):** So sánh hợp lệ 2-3 sản phẩm, từ chối thêm trùng sản phẩm, từ chối vượt quá 3 sản phẩm, từ chối sản phẩm khác danh mục, loại bỏ sản phẩm nháp, hiển thị "Chưa có thông tin" khi thiếu spec, đúng thứ tự định nghĩa danh mục.
+6. **Tìm kiếm (8 tests):** Tìm kiếm hoa/thường, tìm kiếm tiếng Việt không dấu (`unaccent`), xử lý chuỗi rỗng/khoảng trắng, tự động rút gọn từ khóa quá dài > 120 ký tự, loại bỏ bài viết nháp/tương lai, phân tách sản phẩm và bài viết.
+7. **Giao diện & Điều hướng (3 tests):** Kiểm tra cấu trúc menu 4 mục (`Trang chủ | Bài viết | Phương pháp | Sản phẩm ▾`), kiểm tra active state, responsive layout.
+
 

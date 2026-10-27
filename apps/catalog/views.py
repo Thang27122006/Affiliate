@@ -406,6 +406,17 @@ def product_detail_view(request, slug):
         .annotate(min_price=Min("offers__price", filter=Q(offers__is_active=True)))[:3]
     )
 
+    # Ghi nhận lượt xem trang an toàn (không làm gián đoạn người đọc nếu có sự cố)
+    if request.method == "GET":
+        try:
+            from apps.analytics.models import PageView
+            PageView.objects.create(
+                product=product,
+                path=request.path[:500],
+            )
+        except Exception:
+            pass
+
     context = {
         "title": f"{product.name} ({product.brand}) - Thông số & Nơi bán | Góc Phụ Kiện",
         "product": product,
@@ -417,3 +428,4 @@ def product_detail_view(request, slug):
         "similar_products": similar_products,
     }
     return render(request, "catalog/product_detail.html", context)
+

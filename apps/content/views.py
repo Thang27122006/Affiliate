@@ -79,6 +79,17 @@ def article_detail_view(request, slug):
         .order_by("-published_at")[:3]
     )
 
+    # Ghi nhận lượt xem bài viết an toàn
+    if request.method == "GET":
+        try:
+            from apps.analytics.models import PageView
+            PageView.objects.create(
+                article=article,
+                path=request.path[:500],
+            )
+        except Exception:
+            pass
+
     context = {
         "title": f"{article.title} - Góc Phụ Kiện",
         "article": article,
@@ -87,3 +98,4 @@ def article_detail_view(request, slug):
         "related_articles": related_articles,
     }
     return render(request, "content/article_detail.html", context)
+
