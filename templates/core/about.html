@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Về chúng tôi & Phương pháp đánh giá - Góc Phụ Kiện{% endblock %}
+{% block meta_description %}Tìm hiểu về tôn chỉ hoạt động, phương pháp kiểm thử thực tế và chính sách tiếp thị liên kết minh bạch của Góc Phụ Kiện.{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="container">
+    <nav class="breadcrumb-nav" aria-label="Đường dẫn điều hướng">
+        <ol class="breadcrumb-list">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Trang chủ</a></li>
+            <li class="breadcrumb-separator" aria-hidden="true">/</li>
+            <li class="breadcrumb-item breadcrumb-current" aria-current="page">Giới thiệu & Phương pháp</li>
+        </ol>
+    </nav>
+</div>
+
+<!-- Header -->
+<header class="page-header">
+    <div class="container" style="max-width: 800px;">
+        <span class="hero-tagline">Tôn chỉ độc lập</span>
+        <h1 class="page-title">Về Chúng Tôi & Phương Pháp Đánh Giá</h1>
+        <p class="section-subtitle">
+            Vì sao Góc Phụ Kiện ra đời, chúng tôi đánh giá sản phẩm thế nào và cam kết minh bạch ra sao với bạn đọc.
+        </p>
+    </div>
+</header>
+
+<div class="container section" style="max-width: 800px;">
+    <!-- Sứ mệnh -->
+    <div style="margin-bottom: 40px;">
+        <h2 style="font-size: 1.4rem; margin-bottom: 12px; color: var(--primary);">1. Sứ mệnh dành riêng cho sinh viên</h2>
+        <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 14px;">
+            Khi bước vào môi trường đại học hoặc cao đẳng, chiếc laptop trở thành công cụ học tập thiết yếu. Tuy nhiên, việc phải ngồi liên tục trước màn hình thấp, gõ trên bàn phím chật chội và dùng bàn di chuột không công thái học dễ dẫn đến tình trạng mỏi mắt, đau cổ vai gáy và giảm hiệu suất học bài.
+        </p>
+        <p style="color: var(--text-secondary); line-height: 1.7;">
+            <strong>Góc Phụ Kiện</strong> được thành lập nhằm giúp các bạn sinh viên tìm được những mẫu chuột chống ồn cho thư viện, bàn phím cơ gõ êm ái bền bỉ và giá đỡ laptop tản nhiệt chuẩn công thái học với mức chi phí hợp lý nhất.
+        </p>
+    </div>
+
+    <!-- 4 Trụ cột phương pháp đánh giá -->
+    <div style="margin-bottom: 40px;">
+        <h2 style="font-size: 1.4rem; margin-bottom: 16px; color: var(--primary);">2. Bốn trụ cột trong phương pháp kiểm thử</h2>
+        
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 6px;">🔍 Phân biệt rành mạch "Đã trải nghiệm" và "Tổng hợp thông tin"</h3>
+                <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; margin: 0;">
+                    Mọi bài viết trên website đều phải công bố rõ ràng trạng thái trải nghiệm. Nếu chúng tôi đã cầm trên tay và dùng thực tế, bài viết sẽ có nhãn <strong>"✓ Đã trực tiếp trải nghiệm"</strong> kèm phương pháp và thời gian thử. Nếu là bài tổng hợp thông số kỹ thuật, bài viết sẽ ghi nhận <strong>"Tổng hợp thông tin"</strong>. Tuyệt đối không giả mạo trải nghiệm.
+                </p>
+            </div>
+
+            <div style="background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 6px;">🔇 Tiêu chí phù hợp môi trường học tập sinh viên</h3>
+                <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; margin: 0;">
+                    Chúng tôi đặc biệt chú trọng các yếu tố như: độ ồn click chuột (để dùng trong thư viện/phòng ký túc xá ban đêm), kích thước gập gọn balo, trọng lượng di động và khả năng chống trơn trượt trên các loại bàn học nhỏ hẹp.
+                </p>
+            </div>
+
+            <div style="background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 6px;">💰 Đánh giá trên tỷ lệ giá thành / giá trị (P/P)</h3>
+                <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; margin: 0;">
+                    Sinh viên cần những sản phẩm dùng được 2 - 4 năm học chứ không chỉ hào nhoáng bên ngoài. Chúng tôi không đánh giá sản phẩm dựa trên thương hiệu đắt tiền mà dựa trên độ bền và linh kiện thực tế so với số tiền bỏ ra.
+                </p>
+            </div>
+
+            <div style="background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 6px;">🚫 Không chấm điểm sao cảm tính</h3>
+                <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; margin: 0;">
+                    Website không đưa ra các con số đánh giá 4.5/5 hay 5 sao vu vơ khi chưa có thang đo định lượng thống nhất. Chúng tôi phân tích ưu điểm, nhược điểm cụ thể để bạn tự đưa ra quyết định phù hợp nhất với nhu cầu cá nhân.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chính sách tiếp thị liên kết -->
+    <div id="affiliate-policy" style="background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 40px;">
+        <h2 style="font-size: 1.3rem; margin-bottom: 12px; color: var(--primary);">3. Chính sách tiếp thị liên kết (Affiliate Policy)</h2>
+        <p style="color: var(--text-secondary); line-height: 1.6; font-size: 0.95rem; margin-bottom: 12px;">
+            Để duy trì hoạt động máy chủ, đội ngũ kỹ thuật và chi phí mua phụ kiện thử nghiệm mà không phải thu phí người đọc hay hiển thị banner quảng cáo gây phiền toái, chúng tôi tham gia các chương trình tiếp thị liên kết (Affiliate Marketing) với các nền tảng thương mại điện tử uy tín tại Việt Nam (Shopee, Tiki, Lazada...).
+        </p>
+        <ul style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; padding-left: 20px; margin-bottom: 14px;">
+            <li><strong>Không tăng giá mua:</strong> Bạn nhấp qua liên kết của chúng tôi hay vào trực tiếp thì mức giá sản phẩm bạn thanh toán là hoàn toàn giống nhau.</li>
+            <li><strong>Không nhận tiền để khen sai sự thật:</strong> Chúng tôi chỉ giới thiệu các sản phẩm mà chúng tôi tin tưởng là xứng đáng với ngân sách của sinh viên.</li>
+            <li><strong>Chỉ hiển thị giá tham khảo có thời điểm ghi nhận:</strong> Giá thương mại điện tử biến động liên tục; chúng tôi luôn ghi chú ngày cập nhật giá và không dùng các cụm từ "giá rẻ nhất" nếu không có số liệu chứng minh.</li>
+        </ul>
+    </div>
+
+    <div style="text-align: center;">
+        <a href="{% url 'content:article_list' %}" class="btn btn-primary">
+            Khám phá các bài đánh giá ngay
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}404 - Không tìm thấy trang | Góc Phụ Kiện{% endblock %}
+
+{% block content %}
+<div class="container section">
+    <div class="empty-state" style="max-width: 600px; margin: 48px auto; padding: 60px 24px;">
+        <div style="font-size: 4rem; font-weight: 800; color: var(--primary); margin-bottom: 8px;">404</div>
+        <h1 class="empty-title" style="font-size: 1.5rem;">Không tìm thấy trang bạn yêu cầu</h1>
+        <p class="empty-desc">
+            Đường dẫn có thể đã thay đổi, bài viết đang ở trạng thái bản nháp chưa công khai hoặc trang không tồn tại trên hệ thống.
+        </p>
+
+        <!-- Search bar trong 404 -->
+        <div style="max-width: 400px; margin: 0 auto 24px;">
+            <form action="{% url 'core:search' %}" method="get" class="search-form">
+                <span class="search-icon" aria-hidden="true">🔍</span>
+                <input type="search" name="q" class="search-input" placeholder="Thử tìm kiếm nội dung khác...">
+            </form>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <a href="{% url 'core:home' %}" class="btn btn-primary">
+                &larr; Về trang chủ
+            </a>
+            <a href="{% url 'content:article_list' %}" class="btn btn-secondary">
+                Duyệt bài viết
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
