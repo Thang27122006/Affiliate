@@ -70,6 +70,12 @@
                                 {{ cat.name }}
                             </a>
                         {% endfor %}
+                        <div class="dropdown-divider" role="separator"></div>
+                        <a href="{% url 'catalog:compare' %}" 
+                           class="dropdown-item {% if request.resolver_match.url_name == 'compare' %}active{% endif %}" 
+                           role="menuitem">
+                            ⚖️ <strong>So sánh đối đầu</strong>
+                        </a>
                     </div>
                 </div>
             </nav>
@@ -108,6 +114,7 @@
                     <li><a href="{% url 'catalog:category_detail' slug='chuot-may-tinh' %}">🖱️ Chuột máy tính silent</a></li>
                     <li><a href="{% url 'catalog:category_detail' slug='ban-phim' %}">⌨️ Bàn phím cơ & di động</a></li>
                     <li><a href="{% url 'catalog:category_detail' slug='gia-do-laptop' %}">💻 Giá đỡ laptop công thái học</a></li>
+                    <li><a href="{% url 'catalog:compare' %}">⚖️ So sánh đối đầu</a></li>
                     <li><a href="{% url 'content:article_list' %}">📝 Tất cả bài đánh giá</a></li>
                 </ul>
             </div>

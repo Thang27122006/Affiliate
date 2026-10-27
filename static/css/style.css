@@ -1255,3 +1255,72 @@ h1, h2, h3, h4, h5, h6 {
         white-space: normal;
     }
 }
+
+/* ==========================================================================
+   PRODUCT COMPARISON (BẢNG SO SÁNH ĐỐI ĐẦU)
+   ========================================================================== */
+.compare-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 32px;
+}
+
+.compare-table {
+    width: 100%;
+    min-width: 680px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.compare-table th,
+.compare-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.compare-table th[scope="row"] {
+    width: 220px;
+    min-width: 180px;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-weight: 600;
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    border-right: 1px solid var(--border-color);
+}
+
+.compare-remove-btn {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    transition: var(--transition);
+}
+
+.compare-remove-btn:hover {
+    color: #dc2626;
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
+
+@media (max-width: 768px) {
+    .compare-table {
+        min-width: 580px;
+    }
+
+    .compare-table th,
+    .compare-table td {
+        padding: 10px 12px;
+        font-size: 0.88rem;
+    }
+}

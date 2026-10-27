@@ -41,6 +41,12 @@
                 <button type="submit" class="btn btn-primary" style="position: absolute; right: 4px; padding: 7px 16px; border-radius: var(--radius-full);">Tìm</button>
             </form>
         </div>
+
+        {% if raw_query|length > 120 %}
+        <div class="alert alert-info" style="margin-top: 15px; max-width: 560px; padding: 10px 16px; background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: var(--radius-md); color: #0369a1; font-size: 0.88rem;">
+            ℹ️ Từ khóa tìm kiếm quá dài đã được tự động rút gọn còn 120 ký tự để tối ưu tra cứu.
+        </div>
+        {% endif %}
     </div>
 </header>
 

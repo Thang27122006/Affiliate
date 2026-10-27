@@ -50,43 +50,48 @@ def about_view(request):
     return render(request, "core/about.html", context)
 
 
+from apps.core.search_utils import clean_search_query, build_search_filter
+
+
 def search_view(request):
     """
-    Tìm kiếm toàn trang trên sản phẩm và bài viết đã xuất bản.
+    Tìm kiếm toàn trang trên sản phẩm (tên, thương hiệu, model)
+    và bài viết (tiêu đề, tóm tắt) đã xuất bản.
+    Xử lý an toàn chuỗi rỗng, khoảng trắng thừa, giới hạn độ dài
+    và hỗ trợ tìm kiếm không dấu trên PostgreSQL.
     """
-    query = request.GET.get("q", "").strip()
+    raw_query = request.GET.get("q", "")
+    query = clean_search_query(raw_query, max_length=120)
     products = []
     articles = []
 
     if query:
+        # Lọc sản phẩm theo tên, thương hiệu, model
+        product_filter = build_search_filter(["name", "brand", "model"], query)
         products = (
             Product.objects.published()
-            .filter(
-                Q(name__icontains=query)
-                | Q(brand__icontains=query)
-                | Q(model__icontains=query)
-                | Q(short_description__icontains=query)
-                | Q(category__name__icontains=query)
-            )
+            .filter(product_filter)
             .select_related("category")
+            .prefetch_related("images")
             .annotate(min_price=Min("offers__price", filter=Q(offers__is_active=True)))
             .distinct()
+            .order_by("-created_at")
         )
 
+        # Lọc bài viết theo tiêu đề, tóm tắt
+        article_filter = build_search_filter(["title", "summary"], query)
         articles = (
             Article.objects.published()
-            .filter(
-                Q(title__icontains=query)
-                | Q(summary__icontains=query)
-                | Q(content__icontains=query)
-            )
+            .filter(article_filter)
             .select_related("author")
             .distinct()
+            .order_by("-published_at")
         )
 
     context = {
         "title": f"Tìm kiếm: '{query}' - Góc Phụ Kiện" if query else "Tìm kiếm - Góc Phụ Kiện",
         "query": query,
+        "raw_query": raw_query,
         "products": products,
         "articles": articles,
         "total_results": len(products) + len(articles),

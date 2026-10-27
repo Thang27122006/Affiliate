@@ -142,9 +142,10 @@ class Command(BaseCommand):
 
         # 4. Sản phẩm demo (Product)
         products_data = [
+            # Chuột máy tính
             {
                 "cat": "chuot-may-tinh",
-                "name": "Pebble M350",
+                "name": "Chuột không dây Pebble M350",
                 "brand": "Logitech",
                 "slug": "logitech-pebble-m350",
                 "model": "M350",
@@ -157,8 +158,37 @@ class Command(BaseCommand):
                 ],
             },
             {
+                "cat": "chuot-may-tinh",
+                "name": "Chuột công thái học M331 Silent Plus",
+                "brand": "Logitech",
+                "slug": "logitech-m331-silent-plus",
+                "model": "M331",
+                "short_description": "Chuột công thái học tay phải, giảm hơn 90% tiếng ồn click, pin bền bỉ 24 tháng.",
+                "specs": [
+                    ("dpi_max", "1000"),
+                    ("connection_type", "USB Receiver 2.4GHz"),
+                    ("weight", "101"),
+                    ("is_silent", "Có"),
+                ],
+            },
+            {
+                "cat": "chuot-may-tinh",
+                "name": "Chuột không dây EM901X Wireless RGB",
+                "brand": "DareU",
+                "slug": "dareu-em901x-wireless-rgb",
+                "model": "EM901X",
+                "short_description": "Chuột gaming & học tập không dây kèm dock sạc RGB tiện lợi, trọng lượng đầm tay.",
+                "specs": [
+                    ("dpi_max", "6000"),
+                    ("connection_type", "Type-C & 2.4GHz Wireless"),
+                    ("weight", "85"),
+                    ("is_silent", "Không"),
+                ],
+            },
+            # Bàn phím
+            {
                 "cat": "ban-phim",
-                "name": "EK387 RGB",
+                "name": "Bàn phím cơ EK387 RGB",
                 "brand": "E-Dra",
                 "slug": "e-dra-ek387-rgb",
                 "model": "EK387",
@@ -170,6 +200,33 @@ class Command(BaseCommand):
                 ],
             },
             {
+                "cat": "ban-phim",
+                "name": "Bàn phím cơ EK87 Multi-Led",
+                "brand": "DareU",
+                "slug": "dareu-ek87-multi-led",
+                "model": "EK87",
+                "short_description": "Bàn phím cơ giá rẻ cảm giác gõ tốt, led cầu vồng phân vùng bắt mắt.",
+                "specs": [
+                    ("layout", "TKL 87 phím"),
+                    ("switch_type", "D-Switch Brown/Red"),
+                    ("is_wireless", "Không (Cáp USB liền 1.8m)"),
+                ],
+            },
+            {
+                "cat": "ban-phim",
+                "name": "Bàn phím không dây K380 Multi-Device",
+                "brand": "Logitech",
+                "slug": "logitech-k380-multi-device",
+                "model": "K380",
+                "short_description": "Bàn phím Bluetooth không dây mỏng nhẹ, phím tròn êm ái, chuyển đổi 3 thiết bị.",
+                "specs": [
+                    ("layout", "Compact 79 phím tròn"),
+                    ("switch_type", "Scissor phím cắt kéo siêu êm"),
+                    ("is_wireless", "Có (Bluetooth 3 thiết bị)"),
+                ],
+            },
+            # Giá đỡ laptop
+            {
                 "cat": "gia-do-laptop",
                 "name": "Giá đỡ nhôm N3",
                 "brand": "OEM",
@@ -180,6 +237,19 @@ class Command(BaseCommand):
                     ("material", "Hợp kim nhôm & Silicone chống trượt"),
                     ("supported_size", "11 - 15.6"),
                     ("adjustment_levels", "6"),
+                ],
+            },
+            {
+                "cat": "gia-do-laptop",
+                "name": "Giá đỡ nhôm Orico LST-T1",
+                "brand": "Orico",
+                "slug": "gia-do-nhom-orico-lst-t1",
+                "model": "LST-T1",
+                "short_description": "Giá đỡ laptop cao cấp bằng nhôm nguyên khối, trục kép xoay góc linh hoạt chống mỏi cổ.",
+                "specs": [
+                    ("material", "Nhôm nguyên khối phay xước"),
+                    ("supported_size", "11 - 17"),
+                    ("adjustment_levels", "Vô cấp (trục kép)"),
                 ],
             },
         ]
@@ -199,8 +269,13 @@ class Command(BaseCommand):
                     "is_demo": True,
                 },
             )
-            if not prod_created and options.get("publish"):
-                prod_obj.status = target_status
+            if not prod_created:
+                prod_obj.name = p["name"]
+                prod_obj.brand = p["brand"]
+                prod_obj.model = p["model"]
+                prod_obj.short_description = p["short_description"]
+                if options.get("publish"):
+                    prod_obj.status = target_status
                 prod_obj.save()
             products[p["slug"]] = prod_obj
             self.stdout.write(f" - Sản phẩm: {prod_obj}")
@@ -255,16 +330,46 @@ class Command(BaseCommand):
                 "price": Decimal("350000"),
             },
             {
+                "product": products["logitech-m331-silent-plus"],
+                "merchant": merchants["tiki-vn"],
+                "url": "https://tiki.vn/demo-san-pham-logitech-m331-placeholder",
+                "price": Decimal("320000"),
+            },
+            {
+                "product": products["dareu-em901x-wireless-rgb"],
+                "merchant": merchants["shopee-vn"],
+                "url": "https://shopee.vn/demo-san-pham-dareu-em901x-placeholder",
+                "price": Decimal("490000"),
+            },
+            {
                 "product": products["e-dra-ek387-rgb"],
                 "merchant": merchants["tiki-vn"],
                 "url": "https://tiki.vn/demo-san-pham-e-dra-ek387-placeholder",
                 "price": Decimal("590000"),
             },
             {
+                "product": products["dareu-ek87-multi-led"],
+                "merchant": merchants["shopee-vn"],
+                "url": "https://shopee.vn/demo-san-pham-dareu-ek87-placeholder",
+                "price": Decimal("450000"),
+            },
+            {
+                "product": products["logitech-k380-multi-device"],
+                "merchant": merchants["tiki-vn"],
+                "url": "https://tiki.vn/demo-san-pham-logitech-k380-placeholder",
+                "price": Decimal("620000"),
+            },
+            {
                 "product": products["gia-do-nhom-gap-gon-n3"],
                 "merchant": merchants["shopee-vn"],
                 "url": "https://shopee.vn/demo-gia-do-n3-placeholder",
                 "price": None,  # Mẫu sản phẩm chưa có giá theo yêu cầu đề bài
+            },
+            {
+                "product": products["gia-do-nhom-orico-lst-t1"],
+                "merchant": merchants["tiki-vn"],
+                "url": "https://tiki.vn/demo-gia-do-orico-lst-t1-placeholder",
+                "price": Decimal("390000"),
             },
         ]
 

@@ -58,6 +58,11 @@
                 <p style="color: var(--text-secondary); font-size: 0.98rem; line-height: 1.6;">
                     {{ product.short_description|default:"Sản phẩm được lựa chọn và tổng hợp thông số phục vụ góc học tập sinh viên." }}
                 </p>
+                <div style="margin-top: 10px; margin-bottom: 16px;">
+                    <a href="{% url 'catalog:compare' %}?p={{ product.slug }}" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem;">
+                        <span>⚖️ So sánh với phụ kiện cùng loại</span>
+                    </a>
+                </div>
             </div>
 
             <!-- Khối Nơi bán & Giá tham khảo (Offers) -->
@@ -210,11 +215,18 @@
                     <h3 class="product-name" style="font-size: 0.98rem;">
                         <a href="{% url 'catalog:product_detail' slug=prod.slug %}">{{ prod.name }}</a>
                     </h3>
-                    <div class="product-footer">
+                    <div class="product-footer" style="gap: 6px;">
                         <span class="product-price" style="font-size: 0.9rem;">
                             {% if prod.min_price %}từ {{ prod.min_price|floatformat:0 }} đ{% else %}Chưa có giá{% endif %}
                         </span>
-                        <a href="{% url 'catalog:product_detail' slug=prod.slug %}" class="btn btn-secondary btn-sm">Xem</a>
+                        <div style="display: flex; gap: 4px;">
+                            <a href="{% url 'catalog:compare' %}?p={{ product.slug }}&p={{ prod.slug }}" class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 0.78rem;" title="So sánh đối đầu 2 mẫu">
+                                ⚖️ So sánh
+                            </a>
+                            <a href="{% url 'catalog:product_detail' slug=prod.slug %}" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.78rem;">
+                                Xem
+                            </a>
+                        </div>
                     </div>
                 </div>
             </article>
