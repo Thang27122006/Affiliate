@@ -94,7 +94,7 @@ Bạn có thể sử dụng PostgreSQL cài sẵn trên máy cục bộ hoặc q
 #### Cách 1: Sử dụng PostgreSQL cài đặt cục bộ trên máy
 ```bash
 # Tạo cơ sở dữ liệu 'gocphukien'
-psql -U postgres -c "CREATE DATABASE gocphukien;"
+psql -h localhost -U postgres -c "CREATE DATABASE gocphukien;"
 ```
 
 #### Cách 2: Sử dụng Docker Compose (Tuỳ chọn)
@@ -106,11 +106,11 @@ docker-compose up -d
 ### Bước 4: Kích hoạt Extension unaccent trên PostgreSQL
 Hệ thống sử dụng extension `unaccent` của PostgreSQL để hỗ trợ tìm kiếm tiếng Việt không dấu (ví dụ: gõ `chuot` vẫn tìm ra `Chuột máy tính`):
 ```bash
-# Kích hoạt extension unaccent trong cơ sở dữ liệu
-psql -U postgres -d gocphukien -c "CREATE EXTENSION IF NOT EXISTS unaccent;"
+# Kích hoạt extension unaccent trong cơ sở dữ liệu (kết nối qua TCP -h localhost, mật khẩu mặc định là 123)
+psql -h localhost -U postgres -d gocphukien -c "CREATE EXTENSION IF NOT EXISTS unaccent;"
 
 # (Khuyến nghị cho test database) Kích hoạt trên template1 để mọi test db tự động có unaccent:
-psql -U postgres -d template1 -c "CREATE EXTENSION IF NOT EXISTS unaccent;"
+psql -h localhost -U postgres -d template1 -c "CREATE EXTENSION IF NOT EXISTS unaccent;"
 ```
 
 ### Bước 5: Chạy Migration và Tạo Superuser
