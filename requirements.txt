@@ -5,3 +5,8 @@ python-dotenv==1.2.4
 pillow==13.0.0
 asgiref==3.13.0
 sqlparse==0.6.0
+
+# Content Processing & Sanitization
+markdown==3.11.2
+bleach==6.4.0
+webencodings==0.6.1

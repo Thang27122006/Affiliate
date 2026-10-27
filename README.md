@@ -112,7 +112,17 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-### Bước 5: Kiểm tra Hệ thống & Khởi chạy Server
+### Bước 5: (Tùy chọn) Nạp Dữ liệu Mẫu (Demo Data)
+Hệ thống cung cấp management command độc lập để nạp dữ liệu mẫu cho 3 danh mục phụ kiện:
+```bash
+# Khởi tạo dữ liệu mẫu (mặc định ở trạng thái Bản nháp, an toàn và không trùng lặp)
+python manage.py seed_demo_data
+
+# (Tùy chọn) Xóa sạch dữ liệu mẫu demo cũ và nạp lại
+python manage.py seed_demo_data --clean-demo
+```
+
+### Bước 6: Kiểm tra Hệ thống & Khởi chạy Server
 ```bash
 # Chạy system check của Django
 python manage.py check

@@ -1,52 +1,109 @@
 from django.shortcuts import render
 from django.db import connection
+from django.db.models import Q, Min
 from django.http import JsonResponse
+from apps.catalog.models import Category, Product
+from apps.content.models import Article
 
 
 def home_view(request):
     """
-    Trang chủ tối giản của dự án 'Góc Phụ Kiện'.
-    Xác nhận hệ thống khởi động thành công và hiển thị các thông tin nền tảng.
+    Trang chủ Góc Phụ Kiện:
+    Hiển thị thông điệp cốt lõi, danh mục phụ kiện trọng tâm,
+    sản phẩm nổi bật và các bài viết đánh giá/cẩm nang mới nhất.
+    Chỉ hiển thị dữ liệu đã xuất bản hợp lệ.
     """
-    db_connected = False
-    db_error = None
-    try:
-        connection.ensure_connection()
-        db_connected = True
-    except Exception as exc:
-        db_error = str(exc)
+    categories = Category.objects.published()
+    
+    # Sản phẩm đã xuất bản kèm giá tham khảo thấp nhất từ các offer đang hoạt động
+    featured_products = (
+        Product.objects.published()
+        .select_related("category")
+        .prefetch_related("images", "offers")
+        .annotate(min_price=Min("offers__price", filter=Q(offers__is_active=True)))
+        .order_by("-created_at")[:6]
+    )
+
+    # Bài viết mới nhất đã xuất bản
+    latest_articles = (
+        Article.objects.published()
+        .select_related("author")
+        .order_by("-published_at")[:3]
+    )
 
     context = {
-        "title": "Góc Phụ Kiện - Đánh giá & So sánh phụ kiện học tập, làm việc",
-        "db_connected": db_connected,
-        "db_error": db_error,
-        "categories": [
-            {
-                "id": "chuot",
-                "name": "Chuột máy tính",
-                "icon": "🖱️",
-                "description": "Chuột công thái học, chuột văn phòng êm ái, chuột gaming phục vụ học tập và làm việc.",
-            },
-            {
-                "id": "ban-phim",
-                "name": "Bàn phím",
-                "icon": "⌨️",
-                "description": "Bàn phím cơ, bàn phím silent văn phòng tối ưu gõ phím và bảo vệ cổ tay.",
-            },
-            {
-                "id": "gia-do-laptop",
-                "name": "Giá đỡ laptop",
-                "icon": "💻",
-                "description": "Giá đỡ nâng hạ, nhôm nguyên khối, tản nhiệt giúp tư thế ngồi học chuẩn và giảm mỏi cổ.",
-            },
-        ],
+        "title": "Góc Phụ Kiện - Đánh giá & So sánh phụ kiện học tập, làm việc sinh viên",
+        "categories": categories,
+        "featured_products": featured_products,
+        "latest_articles": latest_articles,
     }
     return render(request, "core/home.html", context)
 
 
+def about_view(request):
+    """
+    Trang giới thiệu sứ mệnh và phương pháp đánh giá minh bạch của Góc Phụ Kiện.
+    """
+    context = {
+        "title": "Về chúng tôi & Phương pháp đánh giá - Góc Phụ Kiện",
+    }
+    return render(request, "core/about.html", context)
+
+
+def search_view(request):
+    """
+    Tìm kiếm toàn trang trên sản phẩm và bài viết đã xuất bản.
+    """
+    query = request.GET.get("q", "").strip()
+    products = []
+    articles = []
+
+    if query:
+        products = (
+            Product.objects.published()
+            .filter(
+                Q(name__icontains=query)
+                | Q(brand__icontains=query)
+                | Q(model__icontains=query)
+                | Q(short_description__icontains=query)
+                | Q(category__name__icontains=query)
+            )
+            .select_related("category")
+            .annotate(min_price=Min("offers__price", filter=Q(offers__is_active=True)))
+            .distinct()
+        )
+
+        articles = (
+            Article.objects.published()
+            .filter(
+                Q(title__icontains=query)
+                | Q(summary__icontains=query)
+                | Q(content__icontains=query)
+            )
+            .select_related("author")
+            .distinct()
+        )
+
+    context = {
+        "title": f"Tìm kiếm: '{query}' - Góc Phụ Kiện" if query else "Tìm kiếm - Góc Phụ Kiện",
+        "query": query,
+        "products": products,
+        "articles": articles,
+        "total_results": len(products) + len(articles),
+    }
+    return render(request, "core/search.html", context)
+
+
+def custom_404_view(request, exception=None):
+    """
+    Trang thông báo lỗi 404 thân thiện, đồng bộ thiết kế với hệ thống.
+    """
+    return render(request, "404.html", status=404)
+
+
 def health_check_view(request):
     """
-    Endpoint kiểm tra sức khỏe hệ thống (Health Check) và kết nối DB.
+    Endpoint kiểm tra sức khỏe hệ thống (Health Check) và kết nối PostgreSQL.
     """
     status = "healthy"
     db_status = "connected"
