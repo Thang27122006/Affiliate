@@ -159,6 +159,13 @@ class ProductImage(TimeStampedModel):
     def __str__(self):
         return f"Ảnh cho {self.product.name} ({self.alt_text[:30]})"
 
+    def clean(self):
+        super().clean()
+        if self.image:
+            from apps.core.validators import validate_image_file
+            if hasattr(self.image, "file"):
+                validate_image_file(self.image.file)
+
 
 class SpecificationDefinition(TimeStampedModel):
     """

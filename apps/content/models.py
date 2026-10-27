@@ -150,6 +150,11 @@ class Article(TimeStampedModel):
         if self.status == StatusChoices.PUBLISHED and not self.published_at:
             self.published_at = timezone.now()
 
+        if self.thumbnail:
+            from apps.core.validators import validate_image_file
+            if hasattr(self.thumbnail, "file"):
+                validate_image_file(self.thumbnail.file)
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = unique_slugify(self, self.title, slug_field_name="slug", max_length=265)

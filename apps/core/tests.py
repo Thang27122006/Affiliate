@@ -329,3 +329,75 @@ class SEOTechnicalTestCase(TestCase):
         self.assertNotContains(response, '"aggregateRating"')
         self.assertNotContains(response, '"ratingValue"')
 
+
+class SecurityUploadValidationTestCase(TestCase):
+    """
+    Kiểm thử bảo mật tải lên hình ảnh:
+    - Loại file: Chỉ cho phép JPG, JPEG, PNG, WEBP.
+    - Chặn hoàn toàn định dạng SVG (chống Stored XSS) và file thực thi (.html, .php...).
+    - Giới hạn dung lượng tối đa 5MB.
+    - Chặn tệp giả mạo đuôi (text file đổi tên thành .jpg).
+    """
+
+    def test_valid_image_accepted(self):
+        """Ảnh PNG hợp lệ được chấp nhận bình thường"""
+        import io
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from apps.core.validators import validate_image_file
+        from PIL import Image
+
+        file_obj = io.BytesIO()
+        img = Image.new("RGB", (100, 100), color="blue")
+        img.save(file_obj, format="PNG")
+        file_obj.seek(0)
+
+        uploaded = SimpleUploadedFile("clean_image.png", file_obj.read(), content_type="image/png")
+        # Không có ngoại lệ nào được ném ra
+        validate_image_file(uploaded)
+
+    def test_svg_rejected_for_security(self):
+        """Tệp SVG bị từ chối tuyệt đối để tránh nguy cơ Stored XSS"""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.core.exceptions import ValidationError
+        from apps.core.validators import validate_image_file
+
+        svg_content = b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert("XSS")</script></svg>'
+        uploaded = SimpleUploadedFile("malicious.svg", svg_content, content_type="image/svg+xml")
+
+        with self.assertRaises(ValidationError) as ctx:
+            validate_image_file(uploaded)
+        self.assertIn("SVG", str(ctx.exception))
+
+    def test_executable_extension_rejected(self):
+        """Các định dạng có thể thực thi (.php, .html, .exe) bị từ chối ngay lập tức"""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.core.exceptions import ValidationError
+        from apps.core.validators import validate_image_file
+
+        uploaded = SimpleUploadedFile("shell.php", b"<?php phpinfo(); ?>", content_type="text/plain")
+        with self.assertRaises(ValidationError):
+            validate_image_file(uploaded)
+
+    def test_fake_image_extension_rejected(self):
+        """Tệp văn bản giả mạo đuôi .jpg bị phát hiện và từ chối"""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.core.exceptions import ValidationError
+        from apps.core.validators import validate_image_file
+
+        fake_image = SimpleUploadedFile("fake.jpg", b"This is just plain text, not an image.", content_type="image/jpeg")
+        with self.assertRaises(ValidationError):
+            validate_image_file(fake_image)
+
+    def test_oversized_image_rejected(self):
+        """Tệp hình ảnh vượt quá 5MB bị từ chối"""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.core.exceptions import ValidationError
+        from apps.core.validators import validate_image_file, MAX_IMAGE_SIZE_BYTES
+
+        # Tạo file vượt quá 5MB
+        oversized = SimpleUploadedFile("big.jpg", b"x" * (MAX_IMAGE_SIZE_BYTES + 1024), content_type="image/jpeg")
+        with self.assertRaises(ValidationError) as ctx:
+            validate_image_file(oversized)
+        self.assertIn("vượt quá", str(ctx.exception))
+
+

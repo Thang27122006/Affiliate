@@ -311,13 +311,32 @@ Tập tin CSV nhập vào hệ thống sử dụng định dạng chuẩn (UTF-8
 ---
 
 ## 7. Kiểm Thử Hệ Thống (Unit Tests)
-Dự án bao gồm **79 bài kiểm thử tự động** bao phủ toàn bộ các luồng nghiệp vụ:
+Dự án bao gồm **92 bài kiểm thử tự động (100% Passed)** bao phủ toàn diện tính đúng đắn và an toàn:
 ```bash
+# Chạy toàn bộ test suite:
 python manage.py test
+
+# Chạy riêng nhóm kiểm thử SEO Kỹ thuật & Bảo mật:
+python manage.py test apps.core.tests.SEOTechnicalTestCase apps.core.tests.SecurityUploadValidationTestCase
 ```
 
-**Các nhóm kiểm thử chính:**
-1. **Analytics Dashboard, Permissions & Reconciliation (20 tests):**
+**Các nhóm kiểm thử chính (92 tests):**
+1. **SEO Kỹ Thuật, Sitemaps & Minh Bạch Dữ Liệu (8 tests):**
+   - Kiểm tra `robots.txt` định dạng text/plain, chặn bot ở `/admin/`, `/analytics/`, `/go/`, `/tim-kiem/`, trỏ đúng `Sitemap`.
+   - Kiểm tra `sitemap.xml` chỉ chứa nội dung đã xuất bản (Published), loại trừ bản nháp, bài hẹn giờ tương lai và trang kỹ thuật.
+   - Kiểm tra Canonical URL động theo domain thực tế từ request, không dùng domain giả lập cố định.
+   - Kiểm tra thẻ `noindex, follow` trên trang tìm kiếm (`/tim-kiem/`), so sánh (`/so-sanh/`) và các tổ hợp bộ lọc danh mục/sản phẩm.
+   - Kiểm tra nội dung cam kết quyền riêng tư (không lưu IP thô, không fingerprint, không lưu PII người mua).
+   - Kiểm tra chính sách sửa sai (Correction Policy) và 3 mẫu cấu trúc bài viết biên tập chuẩn tại `/gioi-thieu/`.
+   - Kiểm tra Open Graph (`og:*`), Twitter Cards (`twitter:*`), và Schema `Article`, `BreadcrumbList`.
+   - Xác nhận **tuyệt đối không tạo rating, aggregateRating giả** và chưa thêm `Product`/`Offer` schema khi chưa có dữ liệu thời gian thực.
+2. **Bảo Mật Tải Lên Hình Ảnh & File Media (5 tests):**
+   - Chấp nhận các định dạng ảnh chuẩn: JPG, JPEG, PNG, WEBP.
+   - Từ chối tuyệt đối tệp SVG nhằm triệt tiêu nguy cơ tấn công Stored XSS.
+   - Từ chối các tệp có đuôi thực thi nguy hiểm (`.php`, `.html`, `.exe`, `.sh`...).
+   - Phát hiện và từ chối tệp văn bản giả mạo đuôi ảnh (chống kỹ thuật file polyglot).
+   - Chặn các tệp tải lên vượt quá dung lượng cho phép tối đa 5.0MB.
+3. **Analytics Dashboard, Permissions & Reconciliation (20 tests):**
    - Kiểm thử bảo mật quyền truy cập (Staff only, từ chối khách vãng lai & user thường).
    - Kiểm thử lọc khoảng ngày theo múi giờ `Asia/Ho_Chi_Minh`, tự động đảo ngày nếu nhập ngược.
    - Kiểm thử tính toán CTR sự kiện và chống lỗi chia cho 0 khi chưa có lượt xem.
@@ -325,11 +344,234 @@ python manage.py test
    - Kiểm thử import CSV đối soát: Tạo mới bản ghi, import lặp lại không nhân đôi (idempotency), cập nhật trạng thái đơn (pending -> approved), phân biệt nhiều item trong cùng 1 đơn, báo cáo dòng lỗi và transaction rollback.
    - Kiểm thử tách bạch tiền tệ (VND, USD), đối chiếu sản phẩm/bài viết qua tracking code, xác minh không lưu thông tin PII.
    - Kiểm thử management command `cleanup_analytics_events` (chế độ `--dry-run` không xóa, chế độ thực thi xóa đúng hạn và bảo toàn dữ liệu đối soát).
-2. **Affiliate Link Safety & Redirect (18 tests):** Bắt buộc HTTPS, giữ nguyên tham số tracking, chặn HTTP/javascript/data/file, chặn URL chứa credentials, chặn hostname giả mạo mạo danh subdomain, kiểm tra 2 chế độ direct/redirect và override, redirect 302 thành công, 404 khi offer/merchant inactive hoặc product/category draft, chống Open Redirect, tính chịu lỗi khi logging thất bại.
-3. **Catalog Constraints & Data Integrity (14 tests):** Ràng buộc giá Decimal > 0, chống gán spec sai danh mục, chống trùng spec trên cùng 1 sản phẩm, tự động sinh slug duy nhất chống xung đột.
-4. **Bộ lọc & Sắp xếp (8 tests):** Kiểm thử lọc kết hợp (danh mục + thương hiệu + khoảng giá), xử lý sản phẩm chưa có giá (không coi là 0đ, lọc riêng, sắp xếp nulls_last).
-5. **So sánh sản phẩm (8 tests):** So sánh hợp lệ 2-3 sản phẩm, từ chối thêm trùng sản phẩm, từ chối vượt quá 3 sản phẩm, từ chối sản phẩm khác danh mục, loại bỏ sản phẩm nháp, hiển thị "Chưa có thông tin" khi thiếu spec, đúng thứ tự định nghĩa danh mục.
-6. **Tìm kiếm (8 tests):** Tìm kiếm hoa/thường, tìm kiếm tiếng Việt không dấu (`unaccent`), xử lý chuỗi rỗng/khoảng trắng, tự động rút gọn từ khóa quá dài > 120 ký tự, loại bỏ bài viết nháp/tương lai, phân tách sản phẩm và bài viết.
-7. **Giao diện & Điều hướng (3 tests):** Kiểm tra cấu trúc menu 4 mục (`Trang chủ | Bài viết | Phương pháp | Sản phẩm ▾`), kiểm tra active state, responsive layout.
+4. **Affiliate Link Safety & Redirect (18 tests):** Bắt buộc HTTPS, giữ nguyên tham số tracking, chặn HTTP/javascript/data/file, chặn URL chứa credentials, chặn hostname giả mạo mạo danh subdomain, kiểm tra 2 chế độ direct/redirect và override, redirect 302 thành công, 404 khi offer/merchant inactive hoặc product/category draft, chống Open Redirect, tính chịu lỗi khi logging thất bại.
+5. **Catalog Constraints & Data Integrity (14 tests):** Ràng buộc giá Decimal > 0, chống gán spec sai danh mục, chống trùng spec trên cùng 1 sản phẩm, tự động sinh slug duy nhất chống xung đột, phương thức `get_absolute_url()` chuẩn SEO.
+6. **Bộ lọc & Sắp xếp (8 tests):** Kiểm thử lọc kết hợp (danh mục + thương hiệu + khoảng giá), xử lý sản phẩm chưa có giá (không coi là 0đ, lọc riêng, sắp xếp nulls_last).
+7. **So sánh sản phẩm (8 tests):** So sánh hợp lệ 2-3 sản phẩm, từ chối thêm trùng sản phẩm, từ chối vượt quá 3 sản phẩm, từ chối sản phẩm khác danh mục, loại bỏ sản phẩm nháp, hiển thị "Chưa có thông tin" khi thiếu spec, đúng thứ tự định nghĩa danh mục.
+8. **Tìm kiếm (8 tests):** Tìm kiếm hoa/thường, tìm kiếm tiếng Việt không dấu (`unaccent`), xử lý chuỗi rỗng/khoảng trắng, tự động rút gọn từ khóa quá dài > 120 ký tự, loại bỏ bài viết nháp/tương lai, phân tách sản phẩm và bài viết.
+9. **Giao diện & Điều hướng (3 tests):** Kiểm tra cấu trúc menu 4 mục (`Trang chủ | Bài viết | Phương pháp | Sản phẩm ▾`), kiểm tra active state, responsive layout.
+
+---
+
+## 8. Hướng Dẫn Vận Hành Quản Trị & Biên Tập (Admin Workflow)
+
+### 1. Tạo Tài Khoản Quản Trị Viên Đầu Tiên
+```bash
+python manage.py createsuperuser
+```
+Đăng nhập tại: `http://127.0.0.1:8000/admin/`
+
+### 2. Luồng Biên Tập Danh Mục, Sản Phẩm & Xuất Bản
+1. **Tạo Danh mục (Category):** Vào *Catalog > Danh mục*, nhập tên danh mục (ví dụ: *Chuột máy tính*), thứ tự hiển thị (`display_order`). Đặt trạng thái `published` để danh mục hiển thị trên menu.
+2. **Khai báo Thông số chuẩn (SpecificationDefinition):** Vào *Catalog > Định nghĩa thông số kỹ thuật*, gán các thông số kỹ thuật thuộc danh mục (ví dụ: DPI, Kiểu kết nối, Độ ồn switch, Khối lượng).
+3. **Thêm Sản phẩm (Product):**
+   - Vào *Catalog > Sản phẩm*, chọn danh mục, điền Tên, Thương hiệu, Model, Mô tả ngắn.
+   - Thêm ảnh sản phẩm vào khối inline *Hình ảnh sản phẩm* (hệ thống tự động kiểm tra định dạng JPG/PNG/WEBP và dung lượng <= 5MB).
+   - Nhập giá trị cho từng thông số kỹ thuật tương ứng.
+   - **Trạng thái:** Mặc định là `Bản nháp (draft)`. Khi hoàn thiện thông số và ảnh, đổi sang `Đã xuất bản (published)`.
+4. **Viết và Xuất bản Bài viết (Article):**
+   - Vào *Content > Bài viết*, chọn Loại bài (*Đánh giá chi tiết*, *So sánh đối đầu*, *Cẩm nang chọn mua*).
+   - Soạn thảo nội dung bằng Markdown. Hệ thống tự động làm sạch (sanitization) chống mã độc XSS.
+   - Chọn tác giả, tải ảnh thumbnail đại diện (chỉ nhận JPG/PNG/WEBP <= 5MB).
+   - Gắn các sản phẩm được đề cập trong bài viết.
+   - Điền thông tin minh bạch biên tập: Đã test thực tế hay chưa, thời gian test, phương pháp đo và công bố affiliate.
+   - Chọn trạng thái `Đã xuất bản` và thời điểm xuất bản (`published_at`).
+
+### 3. Cấu Hình Nơi Bán (Merchant) & Liên Kết Affiliate (Offer)
+1. **Tạo Nơi bán (Merchant):**
+   - Vào *Affiliates > Nơi bán / Đối tác*.
+   - Khai báo Tên (ví dụ: *Shopee Vietnam*), Website chính thức (`https://shopee.vn`).
+   - Khai báo danh sách hostname được chấp nhận (`allowed_hostnames`): ví dụ `shopee.vn, s.shopee.vn`.
+   - Chọn Chế độ liên kết mặc định (`link_mode`): Khuyến nghị để *Liên kết trực tiếp (Direct Link)* để tuân thủ điều khoản sàn.
+2. **Tạo Nơi bán & Giá tham khảo cho Sản phẩm (Offer):**
+   - Vào *Affiliates > Nơi bán & Giá tham khảo (Offers)*.
+   - Chọn Sản phẩm và Nơi bán tương ứng.
+   - Nhập `affiliate_url` (bắt buộc giao thức HTTPS và hostname phải khớp với whitelist của nơi bán).
+   - Nhập giá tham khảo (`price`), thời điểm kiểm tra giá (`price_checked_at`).
+   - Có thể chọn ghi đè chế độ liên kết riêng cho Offer nếu chiến dịch cụ thể yêu cầu.
+
+### 4. Quy Trình Nhập Báo Cáo Đối Soát Hoa Hồng (CSV)
+1. Đăng nhập tài khoản quản trị có quyền Staff.
+2. Truy cập: `http://127.0.0.1:8000/analytics/reconciliation/import/`.
+3. Tải về file mẫu [docs/sample_reconciliation.csv](file:///home/tmthang/Affiliate/docs/sample_reconciliation.csv) hoặc dùng nút "Tải file CSV mẫu" trên giao diện.
+4. Điền số liệu đối soát từ dashboard tiếp thị liên kết (Shopee/Lazada/AccessTrade).
+5. Tải file lên form. Hệ thống tự động kiểm tra cú pháp từng dòng qua Transaction nguyên tử.
+6. Xem kết quả thống kê tại Dashboard: `http://127.0.0.1:8000/analytics/dashboard/`.
+
+---
+
+## 9. Hướng Dẫn Triển Khai Thực Tế (Production Deployment)
+
+### 1. Kiến Trúc Triển Khai Khuyến Nghị
+```
+[ Khách hàng / Bot Google ]
+             │ (HTTPS - Cổng 443)
+             ▼
+      [ Nginx Reverse Proxy ]
+             ├── /static/  ──────> Phục vụ trực tiếp từ /staticfiles/
+             ├── /media/   ──────> Phục vụ an toàn từ /media/ (chặn thực thi script)
+             │
+             │ (HTTP nội bộ qua Cổng 8000 hoặc Unix Socket)
+             ▼
+     [ Gunicorn WSGI Server ]
+             │
+             ▼
+     [ Django 5.2 (Python 3.14) ]
+             │
+             ▼
+    [ PostgreSQL 16+ Database ]
+```
+
+### 2. Danh Sách Biến Môi Trường Production (.env)
+Tạo file `.env` trên máy chủ production với các giá trị bí mật thực tế:
+```ini
+# Bắt buộc đổi sang chuỗi ngẫu nhiên bảo mật cao (> 50 ký tự)
+DJANGO_SECRET_KEY=b238a7c9f10e4d2...thay_bang_chuoi_ngau_nhien_dai_hon_50_ky_tu
+
+# Bắt buộc False trên môi trường sản xuất
+DJANGO_DEBUG=False
+
+# Domain chính thức của website (phân cách bằng dấu phẩy)
+DJANGO_ALLOWED_HOSTS=gocphukien.vn,www.gocphukien.vn
+
+# Cấu hình nguồn gốc tin cậy cho CSRF (HTTPS)
+CSRF_TRUSTED_ORIGINS=https://gocphukien.vn,https://www.gocphukien.vn
+
+# Sử dụng cấu hình production
+DJANGO_SETTINGS_MODULE=config.settings.production
+
+# Bật chuyển hướng HTTPS và nhận diện reverse proxy tin cậy
+SECURE_SSL_REDIRECT=True
+USE_REVERSE_PROXY=True
+
+# Thông tin kết nối PostgreSQL Production
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=gocphukien_prod
+DB_USER=gocphukien_user
+DB_PASSWORD=mat_khau_database_rat_manh_va_bao_mat
+DB_HOST=127.0.0.1
+DB_PORT=5432
+
+# Định dạng vùng & múi giờ
+TIME_ZONE=Asia/Ho_Chi_Minh
+LANGUAGE_CODE=vi
+```
+
+### 3. Quy Trình Triển Khai Từng Bước Trên Máy Chủ Linux (Ubuntu/Debian)
+
+#### Bước 1: Thu thập static files
+```bash
+python manage.py collectstatic --noinput
+```
+
+#### Bước 2: Kiểm tra deployment security check của Django
+```bash
+python manage.py check --deploy --settings=config.settings.production
+```
+*Kết quả mong đợi:* `System check identified no issues (0 silenced).`
+
+#### Bước 3: Cấu hình Gunicorn Application Server
+Sử dụng file cấu hình [deploy/gunicorn.conf.py](file:///home/tmthang/Affiliate/deploy/gunicorn.conf.py):
+```bash
+# Kiểm tra khởi chạy thử Gunicorn:
+gunicorn -c deploy/gunicorn.conf.py config.wsgi:application
+```
+
+#### Bước 4: Thiết lập Systemd Service tự động chạy cùng hệ điều hành
+Copy file mẫu [deploy/gocphukien.service](file:///home/tmthang/Affiliate/deploy/gocphukien.service) vào `/etc/systemd/system/`:
+```bash
+sudo cp deploy/gocphukien.service /etc/systemd/system/gocphukien.service
+sudo systemctl daemon-reload
+sudo systemctl enable gocphukien
+sudo systemctl start gocphukien
+sudo systemctl status gocphukien
+```
+
+#### Bước 5: Cấu hình Nginx Reverse Proxy & Chứng chỉ SSL
+Copy file mẫu [deploy/nginx.conf](file:///home/tmthang/Affiliate/deploy/nginx.conf) vào `/etc/nginx/sites-available/`:
+```bash
+sudo cp deploy/nginx.conf /etc/nginx/sites-available/gocphukien
+sudo ln -s /etc/nginx/sites-available/gocphukien /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+
+# Cài đặt chứng chỉ SSL Let's Encrypt miễn phí:
+sudo apt install certbot python3-certbot-nginx -y
+sudo certbot --nginx -d gocphukien.vn -d www.gocphukien.vn
+```
+
+---
+
+## 10. Chiến Lược Sao Lưu, Khôi Phục, Cập Nhật & Rollback
+
+### 1. Kịch Bản Sao Lưu Định Kỳ (Backup)
+Khuyến nghị thiết lập cronjob chạy hàng ngày vào 02:00 sáng:
+
+```bash
+# 1. Sao lưu cơ sở dữ liệu PostgreSQL (định dạng nén Custom Format):
+pg_dump -U gocphukien_user -h 127.0.0.1 -Fc gocphukien_prod > /backup/db/gocphukien_db_$(date +%Y%m%d_%H%M%S).dump
+
+# 2. Sao lưu toàn bộ tệp hình ảnh media do người dùng tải lên:
+tar -czvf /backup/media/gocphukien_media_$(date +%Y%m%d_%H%M%S).tar.gz -C /home/tmthang/Affiliate media/
+```
+
+### 2. Quy Trình Khôi Phục Dữ Liệu (Restore)
+Khi cần khôi phục lại hệ thống từ bản sao lưu:
+```bash
+# 1. Tạm dừng service ứng dụng
+sudo systemctl stop gocphukien
+
+# 2. Khôi phục cơ sở dữ liệu PostgreSQL (tùy chọn -c để xóa tạo lại bảng sạch sẽ):
+pg_restore -U gocphukien_user -h 127.0.0.1 -d gocphukien_prod -c /backup/db/gocphukien_db_YYYYMMDD_HHMMSS.dump
+
+# 3. Khôi phục thư mục media:
+tar -xzvf /backup/media/gocphukien_media_YYYYMMDD_HHMMSS.tar.gz -C /home/tmthang/Affiliate/
+
+# 4. Khởi động lại service
+sudo systemctl start gocphukien
+```
+
+### 3. Quy Trình Cập Nhật Phiên Bản Mới (Deploy Update)
+Khi có bản cập nhật mã nguồn mới từ kho Git:
+```bash
+cd /home/tmthang/Affiliate
+source .venv/bin/activate
+
+# 1. Kéo mã nguồn mới nhất
+git pull origin main
+
+# 2. Cài đặt các thư viện mới (nếu có)
+pip install -r requirements.txt
+
+# 3. Áp dụng migration cơ sở dữ liệu
+python manage.py migrate
+
+# 4. Thu thập lại static files
+python manage.py collectstatic --noinput
+
+# 5. Khởi động lại Gunicorn không gián đoạn (Graceful Reload)
+sudo systemctl reload gocphukien
+```
+
+### 4. Quy Trình Khôi Phục Phiên Bản Cũ (Rollback)
+Nếu bản cập nhật phát sinh sự cố không mong muốn:
+```bash
+cd /home/tmthang/Affiliate
+source .venv/bin/activate
+
+# 1. Trở về commit ổn định trước đó
+git checkout <commit_hash_on_dinh>
+
+# 2. Nếu có migration cần đảo ngược, chạy:
+# python manage.py migrate <app_name> <migration_number_truoc_do>
+# Hoặc khôi phục lại database từ bản dump trước khi deploy
+
+# 3. Thu thập lại static files
+python manage.py collectstatic --noinput
+
+# 4. Khởi động lại service
+sudo systemctl restart gocphukien
+```
+
 
 
