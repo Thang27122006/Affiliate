@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load core_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block meta_description %}So sánh chi tiết thông số kỹ thuật, giá tham khảo và nơi bán phụ kiện sinh viên cùng danh mục trên Góc Phụ Kiện.{% endblock %}
+
+{% block content %}
+<!-- Breadcrumbs -->
+<div class="container">
+    <nav class="breadcrumb-nav" aria-label="Đường dẫn điều hướng">
+        <ol class="breadcrumb-list">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Trang chủ</a></li>
+            <li class="breadcrumb-separator" aria-hidden="true">/</li>
+            <li class="breadcrumb-item"><a href="{% url 'catalog:product_list' %}">Sản phẩm</a></li>
+            <li class="breadcrumb-separator" aria-hidden="true">/</li>
+            {% if category %}
+                <li class="breadcrumb-item"><a href="{% url 'catalog:category_detail' slug=category.slug %}">{{ category.name }}</a></li>
+                <li class="breadcrumb-separator" aria-hidden="true">/</li>
+            {% endif %}
+            <li class="breadcrumb-item breadcrumb-current" aria-current="page">So sánh sản phẩm</li>
+        </ol>
+    </nav>
+</div>
+
+<!-- Page Header -->
+<header class="page-header">
+    <div class="container">
+        <span class="hero-tagline">Công cụ hỗ trợ ra quyết định</span>
+        <h1 class="page-title">
+            {% if category %}
+                So Sánh {{ category.name }}
+            {% else %}
+                So Sánh Phụ Kiện Học Tập &amp; Làm Việc
+            {% endif %}
+        </h1>
+        <p class="section-subtitle" style="max-width: 720px;">
+            Đối chiếu trực quan ảnh sản phẩm, thông số kỹ thuật chuẩn hóa, giá tham khảo thấp nhất và địa chỉ bán uy tín giữa 2 đến 3 sản phẩm trong cùng danh mục.
+        </p>
+
+        <!-- Thông báo quy tắc & tính minh bạch -->
+        <div class="compare-notice-banner" style="margin-top: 18px; padding: 14px 18px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-md); font-size: 0.88rem; color: #166534; line-height: 1.5; max-width: 860px;">
+            <strong>⚖️ Nguyên tắc đánh giá minh bạch:</strong> Góc Phụ Kiện không tự động suy ra hay chỉ định sản phẩm "tốt nhất" chỉ dựa trên giá rẻ nhất hoặc chỉ số kỹ thuật lớn hơn. Trải nghiệm thực tế phụ thuộc vào tính chất công việc, sở thích cầm nắm và ngân sách cá nhân của mỗi bạn sinh viên.
+        </div>
+    </div>
+</header>
+
+<div class="container section">
+    {% if error_message %}
+    <!-- Thông báo lỗi khi vi phạm điều kiện so sánh -->
+    <div class="alert alert-warning" style="margin-bottom: 24px; padding: 16px 20px; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-md); color: #991b1b; display: flex; align-items: flex-start; gap: 12px;">
+        <span style="font-size: 1.4rem; line-height: 1;">⚠️</span>
+        <div>
+            <h4 style="margin: 0 0 6px 0; font-size: 1rem; color: #991b1b; font-weight: 700;">Không thể thực hiện so sánh:</h4>
+            <p style="margin: 0 0 10px 0; font-size: 0.92rem; line-height: 1.4;">{{ error_message }}</p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="{% url 'catalog:compare' %}" class="btn btn-secondary btn-sm" style="font-size: 0.85rem;">Chọn lại sản phẩm</a>
+                <a href="{% url 'catalog:product_list' %}" class="btn btn-outline btn-sm" style="font-size: 0.85rem;">Xem danh sách sản phẩm</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if has_valid_comparison %}
+    <!-- Bảng so sánh sản phẩm (2 đến 3 sản phẩm hợp lệ) -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <span class="badge badge-primary" style="font-size: 0.85rem; padding: 4px 10px;">
+                Danh mục: {{ category.name }} ({{ products|length }}/3 sản phẩm)
+            </span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            {% if can_add_more %}
+            <form method="get" action="{% url 'catalog:compare' %}" style="display: flex; gap: 6px; align-items: center;">
+                {% for prod in products %}
+                    <input type="hidden" name="p" value="{{ prod.slug }}">
+                {% endfor %}
+                <select name="p" class="search-input" style="padding: 6px 12px; font-size: 0.85rem; width: auto;" required>
+                    <option value="">+ Thêm sản phẩm so sánh...</option>
+                    {% for op in other_category_products %}
+                        <option value="{{ op.slug }}">{{ op.brand }} {{ op.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Thêm</button>
+            </form>
+            {% endif %}
+            <a href="{% url 'catalog:compare' %}" class="btn btn-outline btn-sm" style="font-size: 0.82rem;">Xóa bảng so sánh</a>
+        </div>
+    </div>
+
+    <!-- Bảng cuộn ngang mượt mà trên mobile, không tràn layout -->
+    <div class="compare-table-wrapper" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--bg-surface); box-shadow: var(--shadow-sm); margin-bottom: 32px;">
+        <table class="compare-table" style="width: 100%; min-width: 680px; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="background: var(--bg-surface-alt); border-bottom: 2px solid var(--border-color);">
+                    <th scope="col" style="width: 220px; padding: 18px 16px; font-weight: 700; color: var(--text-secondary); vertical-align: top; border-right: 1px solid var(--border-color);">
+                        Sản phẩm đối chiếu
+                    </th>
+                    {% for prod in products %}
+                    <th scope="col" style="padding: 18px 16px; vertical-align: top; border-right: 1px solid var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                            <span class="badge badge-neutral" style="font-size: 0.75rem;">{{ prod.brand }}</span>
+                            <!-- Nút xóa sản phẩm khỏi danh sách so sánh -->
+                            <a href="{{ prod.remove_url }}" 
+                               class="compare-remove-btn" 
+                               title="Bỏ sản phẩm khỏi bảng so sánh" 
+                               style="color: var(--text-muted); font-size: 0.85rem; padding: 2px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); text-decoration: none; line-height: 1;">
+                               ✕ Bỏ
+                            </a>
+                        </div>
+
+                        <div style="width: 100%; height: 140px; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; overflow: hidden;">
+                            {% if prod.primary_img and prod.primary_img.image %}
+                                <img src="{{ prod.primary_img.image.url }}" alt="{{ prod.primary_img.alt_text|default:prod.name }}" style="max-height: 120px; max-width: 90%; object-fit: contain;">
+                            {% else %}
+                                <span style="font-size: 2.8rem;">
+                                    {% if prod.category.slug == 'chuot-may-tinh' %}🖱️
+                                    {% elif prod.category.slug == 'ban-phim' %}⌨️
+                                    {% elif prod.category.slug == 'gia-do-laptop' %}💻
+                                    {% else %}⚡{% endif %}
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <h3 style="font-size: 1.05rem; margin-bottom: 4px; line-height: 1.35;">
+                            <a href="{% url 'catalog:product_detail' slug=prod.slug %}" style="color: var(--text-primary); text-decoration: none;">
+                                {{ prod.name }}
+                            </a>
+                        </h3>
+                        {% if prod.model %}
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">Model: {{ prod.model }}</div>
+                        {% endif %}
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Hàng 1: Giá tham khảo -->
+                <tr style="border-bottom: 1px solid var(--border-color); background: #fafafa;">
+                    <th scope="row" style="padding: 14px 16px; font-weight: 600; color: var(--text-primary); border-right: 1px solid var(--border-color); vertical-align: middle;">
+                        Giá tham khảo thấp nhất
+                        <div style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted); margin-top: 2px;">
+                            Từ các nơi bán đối tác
+                        </div>
+                    </th>
+                    {% for prod in products %}
+                    <td style="padding: 14px 16px; vertical-align: middle; border-right: 1px solid var(--border-color);">
+                        {% if prod.min_price %}
+                            <div style="font-size: 1.15rem; font-weight: 700; color: var(--primary);">
+                                từ {{ prod.min_price|floatformat:0 }} đ
+                            </div>
+                        {% else %}
+                            <span style="font-size: 0.9rem; color: var(--text-muted); font-style: italic;">
+                                Chưa có giá
+                            </span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+
+                <!-- Hàng 2: Thời điểm kiểm tra giá -->
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <th scope="row" style="padding: 12px 16px; font-weight: 600; color: var(--text-primary); border-right: 1px solid var(--border-color); vertical-align: middle;">
+                        Thời điểm kiểm tra giá
+                    </th>
+                    {% for prod in products %}
+                    <td style="padding: 12px 16px; vertical-align: middle; border-right: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-secondary);">
+                        {% if prod.last_checked %}
+                            {{ prod.last_checked|date:"d/m/Y" }}
+                        {% else %}
+                            <span style="color: var(--text-muted); font-style: italic;">Chưa có thông tin</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+
+                <!-- Hàng 3: Nơi bán tham khảo (Offers) -->
+                <tr style="border-bottom: 2px solid var(--border-color); background: #fafafa;">
+                    <th scope="row" style="padding: 14px 16px; font-weight: 600; color: var(--text-primary); border-right: 1px solid var(--border-color); vertical-align: top;">
+                        Nơi bán &amp; Mua hàng
+                        <div style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted); margin-top: 2px;">
+                            Liên kết đối tác minh bạch
+                        </div>
+                    </th>
+                    {% for prod in products %}
+                    <td style="padding: 14px 16px; vertical-align: top; border-right: 1px solid var(--border-color);">
+                        {% if prod.active_offers_list %}
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                {% for offer in prod.active_offers_list %}
+                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.85rem; padding: 6px 10px; background: white; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                                    <div>
+                                        <strong>{{ offer.merchant.name }}</strong>
+                                        {% if offer.price %}
+                                            <div style="color: var(--primary); font-weight: 600;">{{ offer.price|floatformat:0 }} đ</div>
+                                        {% endif %}
+                                    </div>
+                                    <a href="{{ offer.get_destination_url }}" 
+                                       target="_blank" 
+                                       rel="noopener noreferrer sponsored" 
+                                       class="btn btn-affiliate btn-sm" 
+                                       data-track-click="true"
+                                       data-offer-id="{{ offer.id }}"
+                                       data-link-mode="{{ offer.get_effective_link_mode }}"
+                                       style="padding: 4px 8px; font-size: 0.78rem;"
+                                       title="Xem tại đối tác {{ offer.merchant.name }} (Mở tab mới)">
+                                        🏪 Xem ↗
+                                    </a>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <span style="font-size: 0.88rem; color: var(--text-muted); font-style: italic;">Chưa có nơi bán liên kết</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+
+                <!-- Tiêu đề phân mục thông số kỹ thuật -->
+                <tr style="background: var(--bg-surface-alt); border-bottom: 1px solid var(--border-color);">
+                    {% if products|length == 2 %}
+                    <th colspan="3" style="padding: 12px 16px; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.03em;">
+                        📋 Thông số kỹ thuật chi tiết
+                    </th>
+                    {% else %}
+                    <th colspan="4" style="padding: 12px 16px; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.03em;">
+                        📋 Thông số kỹ thuật chi tiết
+                    </th>
+                    {% endif %}
+                </tr>
+
+                <!-- Các hàng thông số kỹ thuật theo thứ tự định nghĩa chung -->
+                {% for srow in spec_rows %}
+                <tr class="{% if forloop.counter|divisibleby:2 %}row-striped{% endif %}" style="border-bottom: 1px solid var(--border-color);">
+                    <th scope="row" style="padding: 12px 16px; font-weight: 600; color: var(--text-secondary); border-right: 1px solid var(--border-color); vertical-align: middle; font-size: 0.9rem;">
+                        {{ srow.name }}
+                        {% if srow.unit %}
+                            <span style="font-weight: normal; color: var(--text-muted); font-size: 0.82rem;">({{ srow.unit }})</span>
+                        {% endif %}
+                    </th>
+                    {% for val in srow.values %}
+                    <td style="padding: 12px 16px; vertical-align: middle; border-right: 1px solid var(--border-color); font-size: 0.9rem;">
+                        {% if val.has_value %}
+                            <span style="color: var(--text-primary); font-weight: 600;">{{ val.display }}</span>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-style: italic;">Chưa có thông tin</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% empty %}
+                <tr>
+                    {% if products|length == 2 %}
+                    <td colspan="3" style="padding: 24px; text-align: center; color: var(--text-muted);">
+                        Danh mục này chưa cấu hình các định nghĩa thông số kỹ thuật.
+                    </td>
+                    {% else %}
+                    <td colspan="4" style="padding: 24px; text-align: center; color: var(--text-muted);">
+                        Danh mục này chưa cấu hình các định nghĩa thông số kỹ thuật.
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+
+                <!-- Hàng mô tả tóm tắt -->
+                <tr style="border-top: 2px solid var(--border-color); background: var(--bg-surface-alt);">
+                    <th scope="row" style="padding: 14px 16px; font-weight: 600; color: var(--text-secondary); border-right: 1px solid var(--border-color); vertical-align: top; font-size: 0.9rem;">
+                        Tóm tắt đặc điểm
+                    </th>
+                    {% for prod in products %}
+                    <td style="padding: 14px 16px; vertical-align: top; border-right: 1px solid var(--border-color); font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">
+                        {{ prod.short_description|default:"Chưa có mô tả ngắn." }}
+                        <div style="margin-top: 10px;">
+                            <a href="{% url 'catalog:product_detail' slug=prod.slug %}" class="btn btn-secondary btn-sm" style="font-size: 0.8rem;">
+                                Xem trang chi tiết &rarr;
+                            </a>
+                        </div>
+                    </td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div style="padding: 16px; background: var(--bg-surface-alt); border-radius: var(--radius-md); font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+        💡 <strong>Mẹo chọn phụ kiện:</strong> Hãy cân nhắc cổng kết nối của máy tính xách tay của bạn (USB Type-A hay Type-C), môi trường sử dụng (yên tĩnh trong thư viện hay phòng trọ riêng) và khả năng mang theo hàng ngày trước khi quyết định mua.
+    </div>
+
+    {% else %}
+    <!-- Giao diện chọn sản phẩm so sánh khi chưa đủ 2 sản phẩm -->
+    <div style="max-width: 800px; margin: 0 auto; text-align: center; padding: 40px 20px;">
+        <div style="font-size: 3.5rem; margin-bottom: 16px;">⚖️</div>
+        <h2 style="font-size: 1.5rem; margin-bottom: 12px; color: var(--text-primary);">
+            Chọn Sản Phẩm Cùng Danh Mục Để So Sánh
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.98rem; margin-bottom: 32px; line-height: 1.6;">
+            Bạn có thể so sánh từ <strong>2 đến 3 sản phẩm</strong> cùng loại (ví dụ: so sánh 2 chuột máy tính hoặc 2 bàn phím cơ) để nắm rõ sự khác biệt về cổng kết nối, độ nhạy, tính năng phím và nơi bán tốt nhất.
+        </p>
+
+        <!-- Danh mục lựa chọn -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; text-align: left;">
+            {% for cat in categories %}
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="font-size: 2rem; margin-bottom: 8px;">
+                        {% if cat.slug == 'chuot-may-tinh' %}🖱️
+                        {% elif cat.slug == 'ban-phim' %}⌨️
+                        {% elif cat.slug == 'gia-do-laptop' %}💻
+                        {% else %}⚡{% endif %}
+                    </div>
+                    <h3 style="font-size: 1.15rem; margin-bottom: 6px; color: var(--text-primary);">
+                        {{ cat.name }}
+                    </h3>
+                    <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 16px;">
+                        {{ cat.description|truncatewords:14 }}
+                    </p>
+                </div>
+                <a href="{% url 'catalog:category_detail' slug=cat.slug %}" class="btn btn-primary btn-sm" style="text-align: center;">
+                    Duyệt danh mục {{ cat.name }}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

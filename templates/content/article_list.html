@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tất cả bài viết & đánh giá phụ kiện sinh viên - Góc Phụ Kiện{% endblock %}
+{% block meta_description %}Tổng hợp bài viết đánh giá chi tiết, cẩm nang chọn mua chuột, bàn phím, giá đỡ laptop tối ưu cho học tập.{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="container">
+    <nav class="breadcrumb-nav" aria-label="Đường dẫn điều hướng">
+        <ol class="breadcrumb-list">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Trang chủ</a></li>
+            <li class="breadcrumb-separator" aria-hidden="true">/</li>
+            <li class="breadcrumb-item breadcrumb-current" aria-current="page">Bài viết</li>
+        </ol>
+    </nav>
+</div>
+
+<!-- Header Chuyên Mục -->
+<header class="page-header">
+    <div class="container">
+        <span class="hero-tagline">Nội dung biên tập</span>
+        <h1 class="page-title">Bài Viết & Đánh Giá Thực Tế</h1>
+        <p class="section-subtitle" style="max-width: 680px;">
+            Góc chia sẻ kinh nghiệm, phân tích ưu nhược điểm và cẩm nang lựa chọn phụ kiện chuẩn ngân sách sinh viên.
+        </p>
+    </div>
+</header>
+
+<div class="container section">
+    <!-- Toolbar: Tab Phân Loại & Tìm kiếm -->
+    <div class="toolbar">
+        <div class="tab-group" role="tablist" aria-label="Bộ lọc loại bài viết">
+            <a href="?{% if search_query %}q={{ search_query }}{% endif %}" class="tab-btn {% if not selected_type %}active{% endif %}">
+                Tất cả bài viết
+            </a>
+            {% for code, label in type_choices %}
+                <a href="?type={{ code }}{% if search_query %}&q={{ search_query }}{% endif %}" class="tab-btn {% if selected_type == code %}active{% endif %}">
+                    {{ label }}
+                </a>
+            {% endfor %}
+        </div>
+
+        <form method="get" class="search-form" style="width: 240px;">
+            {% if selected_type %}
+                <input type="hidden" name="type" value="{{ selected_type }}">
+            {% endif %}
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input type="search" name="q" class="search-input" placeholder="Lọc trong bài viết..." value="{{ search_query }}">
+        </form>
+    </div>
+
+    <!-- Danh sách bài viết -->
+    {% if page_obj.object_list %}
+    <div class="articles-grid">
+        {% for art in page_obj %}
+        <article class="article-card" id="article-{{ art.slug }}">
+            <a href="{% url 'content:article_detail' slug=art.slug %}" class="article-thumb-wrapper" tabindex="-1">
+                {% if art.thumbnail %}
+                    <img src="{{ art.thumbnail.url }}" alt="{{ art.title }}" class="article-thumb" loading="lazy">
+                {% else %}
+                    <div class="product-thumb-placeholder">📝</div>
+                {% endif %}
+                <div class="article-badge-overlay">
+                    <span class="badge badge-primary">{{ art.get_article_type_display }}</span>
+                </div>
+            </a>
+            <div class="article-body">
+                <div class="article-meta">
+                    <span>📅 {{ art.published_at|date:"d/m/Y" }}</span>
+                    <span>✍️ {{ art.author.get_full_name|default:art.author.username }}</span>
+                </div>
+                <h2 class="article-title">
+                    <a href="{% url 'content:article_detail' slug=art.slug %}">{{ art.title }}</a>
+                </h2>
+                <p class="article-summary">{{ art.summary|truncatewords:26 }}</p>
+                <div class="article-footer">
+                    {% if art.is_hands_on_experience %}
+                        <span class="badge badge-success">✓ Đã test thực tế</span>
+                    {% else %}
+                        <span class="badge badge-neutral">Tổng hợp thông tin</span>
+                    {% endif %}
+                    <a href="{% url 'content:article_detail' slug=art.slug %}" style="font-weight: 600; color: var(--primary);">Đọc tiếp &rarr;</a>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    <!-- Phân trang -->
+    {% if page_obj.has_other_pages %}
+    <nav class="pagination-wrapper" aria-label="Phân trang bài viết">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="page-btn">&larr; Trước</a>
+        {% else %}
+            <span class="page-btn disabled">&larr; Trước</span>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="page-btn active" aria-current="page">{{ num }}</span>
+            {% else %}
+                <a href="?page={{ num }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="page-btn">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="page-btn">Sau &rarr;</a>
+        {% else %}
+            <span class="page-btn disabled">Sau &rarr;</span>
+        {% endif %}
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📰</div>
+        <h3 class="empty-title">Không tìm thấy bài viết</h3>
+        <p class="empty-desc">
+            {% if search_query %}
+                Không có bài viết nào khớp với từ khóa "{{ search_query }}".
+            {% else %}
+                Chưa có bài viết nào được xuất bản trong chuyên mục này.
+            {% endif %}
+        </p>
+        <a href="{% url 'content:article_list' %}" class="btn btn-outline btn-sm">Xem tất cả bài viết</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

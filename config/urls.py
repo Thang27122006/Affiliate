@@ -8,8 +8,16 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("", include("apps.affiliates.urls", namespace="affiliates")),
+    path("analytics/", include("apps.analytics.urls", namespace="analytics")),
     path("", include("apps.core.urls", namespace="core")),
+    path("", include("apps.catalog.urls", namespace="catalog")),
+    path("", include("apps.content.urls", namespace="content")),
 ]
+
+
+# Custom 404 handler
+handler404 = "apps.core.views.custom_404_view"
 
 # Serve media and static files in development mode
 if settings.DEBUG:
